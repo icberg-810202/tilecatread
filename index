@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阅随心动</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 启动页 -->
+    <div id="splashPage" class="page">
+        <div class="quote-card">
+            <div class="quote-content" id="splashQuoteContent">
+                <!-- 语录内容 -->
+            </div>
+            <div class="quote-source" id="splashQuoteSource">
+                <!-- 书籍信息 -->
+            </div>
+            <div class="countdown">
+                <span id="countdown">5</span>秒后进入登录页
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户登录页 -->
+    <div id="loginPage" class="page hidden">
+        <div class="login-container">
+            <h1>阅随心动</h1>
+            <div class="login-form">
+                <input type="text" id="username" placeholder="用户名">
+                <input type="password" id="password" placeholder="密码">
+                <button onclick="login()" class="btn-primary">登录</button>
+                <button onclick="showRegister()" class="btn-secondary">注册新用户</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户注册页 -->
+    <div id="registerPage" class="page hidden">
+        <div class="login-container">
+            <h1>用户注册</h1>
+            <div class="login-form">
+                <input type="text" id="regUsername" placeholder="用户名">
+                <input type="password" id="regPassword" placeholder="密码">
+                <input type="password" id="regConfirmPassword" placeholder="确认密码">
+                <button onclick="register()" class="btn-primary">注册</button>
+                <button onclick="backToLogin()" class="btn-secondary">返回登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的书库主页 -->
+    <div id="mainPage" class="page hidden">
+        <header class="header">
+            <div class="user-info">
+                <span id="currentUser">用户</span>
+                <button onclick="logout()" class="logout-btn">退出</button>
+            </div>
+            <h1>📚 我的书库</h1>
+            <div class="selection-info" id="selectionInfo">
+                <!-- 选择信息提示 -->
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索书名或作者...">
+                <button onclick="performSearch()">搜索</button>
+                <button onclick="backToLibrary()" class="btn-secondary">返回书库</button>
+            </div>
+        </header>
+
+        <main class="book-shelf">
+            <div class="books-grid" id="booksGrid">
+                <!-- 书籍卡片 -->
+            </div>
+            
+            <div class="add-book-card" onclick="showAddBookModal()">
+                <div class="add-book-icon">+</div>
+                <p>添加新书</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 语录管理页 -->
+    <div id="quotesPage" class="page hidden">
+        <header class="header">
+            <button onclick="backToMain()" class="back-btn">← 返回</button>
+            <h2 id="currentBookTitle">书籍语录管理</h2>
+        </header>
+        
+        <div class="quotes-management">
+            <div class="quotes-list" id="quotesList">
+                <!-- 语录列表 -->
+            </div>
+            <button onclick="showAddQuoteModal()" class="add-quote-btn">+ 添加语录</button>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="addBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加新书</h3>
+            <input type="text" id="newBookName" placeholder="书籍名称">
+            <input type="text" id="newBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="addNewBook()" class="btn-primary">保存</button>
+                <button onclick="closeAddBookModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addQuoteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加语录</h3>
+            <textarea id="newQuoteText" placeholder="输入语录内容..."></textarea>
+            <div class="modal-actions">
+                <button onclick="addNewQuote()" class="btn-primary">保存</button>
+                <button onclick="closeAddQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
