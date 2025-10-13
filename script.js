@@ -7,8 +7,16 @@ const authorDatabase = [
     { id: 5, book: '围城', author: '钱钟书', quote: '婚姻是一座围城，城外的人想进去，城里的人想出来。' }
 ];
 
-// 用户数据库结构
-let userDatabase = JSON.parse(localStorage.getItem('userDatabase')) || {};
+// 用户数据库结构（健壮解析，防止本地存储损坏导致崩溃）
+let userDatabase = {};
+try {
+    const storedUserDb = localStorage.getItem('userDatabase');
+    userDatabase = storedUserDb ? JSON.parse(storedUserDb) : {};
+} catch (error) {
+    console.warn('本地用户数据损坏，已重置。', error);
+    localStorage.removeItem('userDatabase');
+    userDatabase = {};
+}
 
 // 当前用户信息
 let currentUser = null;
