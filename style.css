@@ -8,6 +8,15 @@ body {
     overflow: hidden;
 }
 
+/* 仅屏幕阅读器可见 */
+.visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
 /* 页面容器 - 修复关键样式 */
 .page {
     position: fixed;
@@ -119,6 +128,18 @@ body {
     border-radius: 6px;
     font-size: 14px;
     cursor: pointer;
+}
+
+/* 键盘可访问性 */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.book-card:focus-visible,
+.back-btn:focus-visible,
+.logout-btn:focus-visible,
+label.btn-secondary:focus-visible {
+    outline: 3px solid #1890ff;
+    outline-offset: 2px;
 }
 
 .btn-primary {
@@ -524,6 +545,10 @@ body {
     align-items: center;
     z-index: 1000;
 }
+
+/* 允许点击遮罩关闭时的可点击提示 */
+.modal:not(.hidden) { cursor: pointer; }
+.modal-content { cursor: default; }
 
 .modal-content {
     background: white;

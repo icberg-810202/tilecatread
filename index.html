@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>阅随心动</title>
+    <meta name="description" content="阅随心动：管理你的书籍与语录，支持添加、搜索、导入导出。">
+    <meta name="theme-color" content="#1890ff">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="阅随心动">
+    <meta property="og:description" content="管理你的书籍与语录，随心而动。">
+    <meta property="og:image" content="favicon.svg">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="favicon.ico">
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
     <!-- 启动页 -->
     <div id="splashPage" class="page">
-        <div class="quote-card">
+        <div class="quote-card" tabindex="0" role="button" aria-label="点击或按Enter跳过">
             <div class="quote-content" id="splashQuoteContent">
                 <!-- 语录内容 -->
             </div>
@@ -26,12 +35,14 @@
     <div id="loginPage" class="page hidden">
         <div class="login-container">
             <h1>阅随心动</h1>
-            <div class="login-form">
-                <input type="text" id="username" placeholder="用户名">
-                <input type="password" id="password" placeholder="密码">
-                <button onclick="login()" class="btn-primary">登录</button>
-                <button onclick="showRegister()" class="btn-secondary">注册新用户</button>
-            </div>
+            <form id="loginForm" class="login-form" onsubmit="login(); return false;" autocomplete="on" novalidate>
+                <label for="username" class="visually-hidden">用户名</label>
+                <input type="text" id="username" name="username" placeholder="用户名" autocomplete="username" required>
+                <label for="password" class="visually-hidden">密码</label>
+                <input type="password" id="password" name="password" placeholder="密码" autocomplete="current-password" required>
+                <button type="submit" class="btn-primary">登录</button>
+                <button type="button" onclick="showRegister()" class="btn-secondary">注册新用户</button>
+            </form>
         </div>
     </div>
 
@@ -39,13 +50,16 @@
     <div id="registerPage" class="page hidden">
         <div class="login-container">
             <h1>用户注册</h1>
-            <div class="login-form">
-                <input type="text" id="regUsername" placeholder="用户名">
-                <input type="password" id="regPassword" placeholder="密码">
-                <input type="password" id="regConfirmPassword" placeholder="确认密码">
-                <button onclick="register()" class="btn-primary">注册</button>
-                <button onclick="backToLogin()" class="btn-secondary">返回登录</button>
-            </div>
+            <form id="registerForm" class="login-form" onsubmit="register(); return false;" autocomplete="on" novalidate>
+                <label for="regUsername" class="visually-hidden">用户名</label>
+                <input type="text" id="regUsername" name="regUsername" placeholder="用户名" autocomplete="username" required>
+                <label for="regPassword" class="visually-hidden">密码</label>
+                <input type="password" id="regPassword" name="regPassword" placeholder="密码" autocomplete="new-password" required minlength="6">
+                <label for="regConfirmPassword" class="visually-hidden">确认密码</label>
+                <input type="password" id="regConfirmPassword" name="regConfirmPassword" placeholder="确认密码" autocomplete="new-password" required minlength="6">
+                <button type="submit" class="btn-primary">注册</button>
+                <button type="button" onclick="backToLogin()" class="btn-secondary">返回登录</button>
+            </form>
         </div>
     </div>
 
@@ -54,7 +68,12 @@
         <header class="header">
             <div class="user-info">
                 <span id="currentUser">用户</span>
-                <button onclick="logout()" class="logout-btn">退出</button>
+                <div class="user-actions">
+                    <button type="button" onclick="exportUserData()" class="btn-secondary">导出数据</button>
+                    <label for="importFile" class="btn-secondary" tabindex="0">导入数据</label>
+                    <input type="file" id="importFile" accept="application/json" class="visually-hidden">
+                    <button type="button" onclick="logout()" class="logout-btn">退出</button>
+                </div>
             </div>
             <h1>📚 我的书库</h1>
             <div class="selection-info" id="selectionInfo">

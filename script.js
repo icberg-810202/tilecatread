@@ -456,13 +456,20 @@ window.onload = function() {
     // 开始倒计时
     startCountdown();
     
-    // 添加跳过功能
+    // 添加跳过功能：点击或按Enter
     const quoteCard = document.querySelector('.quote-card');
     if (quoteCard) {
-        quoteCard.addEventListener('click', function() {
-            console.log('用户点击跳过');
+        const skipToLogin = () => {
+            console.log('用户跳过启动页');
             clearInterval(timer);
             goToLoginPage();
+        };
+        quoteCard.addEventListener('click', skipToLogin);
+        quoteCard.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                skipToLogin();
+            }
         });
     }
     
@@ -475,4 +482,76 @@ window.onload = function() {
             }
         });
     }
+
+    // 导入数据事件绑定
+    const importFile = document.getElementById('importFile');
+    if (importFile) {
+        importFile.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (typeof data !== 'object' || data === null) throw new Error('格式错误');
+                userDatabase = data;
+                saveUserDatabase();
+                alert('导入成功');
+                if (currentUser && userDatabase[currentUser]) {
+                    renderBooksGrid();
+                    updateSelectionInfo();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('导入失败：JSON格式不正确');
+            } finally {
+                e.target.value = '';
+            }
+        });
+    }
+
+    // 模态框：点击遮罩或按ESC关闭
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach((modal) => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeAnyModal(modal);
+            }
+        });
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal').forEach((m) => closeAnyModal(m));
+        }
+    });
 };
+
+// 导出数据
+function exportUserData() {
+    try {
+        const dataStr = JSON.stringify(userDatabase, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'userDatabase.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+        alert('导出失败');
+    }
+}
+
+// 关闭任意模态框
+function closeAnyModal(modalElement) {
+    if (!modalElement || !modalElement.classList) return;
+    if (modalElement.id === 'addBookModal') {
+        closeAddBookModal();
+    } else if (modalElement.id === 'addQuoteModal') {
+        closeAddQuoteModal();
+    } else {
+        modalElement.classList.add('hidden');
+    }
+}
