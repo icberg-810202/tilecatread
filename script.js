@@ -449,6 +449,19 @@ function saveUserDatabase() {
 // 初始化 - 修复关键部分
 window.onload = function() {
     console.log('页面加载完成，初始化应用');
+    // 优先尝试使用本地背景图，失败则回退远程
+    (function initBackgroundImage() {
+        const localSrc = 'blackground.jpt';
+        const remoteSrc = 'https://s21.ax1x.com/2025/10/09/pVHAcp8.jpg';
+        const img = new Image();
+        img.onload = function() {
+            document.documentElement.style.setProperty('--app-bg-image', `url('${localSrc}')`);
+        };
+        img.onerror = function() {
+            document.documentElement.style.setProperty('--app-bg-image', `url('${remoteSrc}')`);
+        };
+        img.src = localSrc;
+    })();
     
     // 确保只显示启动页
     showPage('splashPage');

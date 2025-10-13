@@ -8,6 +8,11 @@ body {
     overflow: hidden;
 }
 
+/* 默认背景图（本地文件） */
+:root {
+    --app-bg-image: url('blackground.jpt');
+}
+
 /* 仅屏幕阅读器可见 */
 .visually-hidden {
     position: absolute !important;
@@ -39,8 +44,8 @@ body {
     background: 
         /* 深色遮罩层，确保文字清晰可读 */
         linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%),
-        /* 您的背景图片 - 优化显示方式 */
-        url('https://s21.ax1x.com/2025/10/09/pVHAcp8.jpg') center/cover no-repeat;
+        /* 背景图片（使用 CSS 变量，可被 JS 切换成本地文件） */
+        var(--app-bg-image) center/cover no-repeat;
     /* 确保背景覆盖且保持比例 */
     background-attachment: fixed;
     background-size: cover;
@@ -87,7 +92,7 @@ body {
     align-items: center;
     background: 
         linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%),
-        url('https://s21.ax1x.com/2025/10/09/pVHAcp8.jpg') center/cover no-repeat;
+        var(--app-bg-image) center/cover no-repeat;
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
