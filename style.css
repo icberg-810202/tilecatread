@@ -1,0 +1,1158 @@
+/* 基础样式 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Microsoft YaHei', sans-serif;
+    background: #f0f2f5;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 页面容器 - 修复关键样式 */
+.page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* 启动页 - 优化背景图片显示 */
+#splashPage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: 
+        /* 深色遮罩层，确保文字清晰可读 */
+        linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%),
+        /* 本地背景图片 - GitHub同步后可直接使用 */
+        url('./images/background.jpg') center/cover no-repeat;
+    /* 确保背景覆盖且保持比例 */
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}
+
+.quote-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 30px;
+    width: 320px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 20px;
+}
+
+.quote-content {
+    font-size: 22px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.quote-source {
+    text-align: right;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.countdown {
+    text-align: center;
+    color: #1890ff;
+    font-size: 14px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+/* 登录页 - DeepSeek 现代风格 */
+#loginPage, #registerPage, #forgotPasswordStep1, #forgotPasswordStep2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 认证容器 - 现代卡片风格 */
+.auth-container {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Logo 区域 */
+.auth-logo h1 {
+    text-align: center;
+    margin: 0 0 16px 0;
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 页面头部 */
+.auth-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.auth-header h2 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.back-icon {
+    position: absolute;
+    left: 0;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.back-icon:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+/* 副标题 */
+.auth-subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+}
+
+/* 表单区域 */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 输入框容器 */
+.input-wrapper {
+    position: relative;
+}
+
+/* 现代化输入框 */
+.modern-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #fafafa;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.modern-input:focus {
+    border-color: #667eea;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.modern-input::placeholder {
+    color: #999;
+}
+
+/* 验证码输入组 */
+.verify-code-wrapper {
+    display: flex;
+    gap: 12px;
+}
+
+.verify-code-wrapper .modern-input {
+    flex: 1;
+}
+
+.code-btn {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+    min-width: 120px;
+}
+
+.code-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.code-btn:disabled {
+    background: linear-gradient(135deg, #d0d0d0 0%, #b0b0b0 100%);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 现代化密码强度指示器 */
+.password-strength-modern {
+    margin-top: -8px;
+}
+
+.strength-bar-container {
+    height: 4px;
+    background: #e8e8e8;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s;
+    border-radius: 2px;
+}
+
+.strength-bar.strength-weak {
+    width: 33%;
+    background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
+}
+
+.strength-bar.strength-medium {
+    width: 66%;
+    background: linear-gradient(90deg, #faad14 0%, #ffc53d 100%);
+}
+
+.strength-bar.strength-strong {
+    width: 100%;
+    background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
+}
+
+.password-strength-modern .strength-text {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+/* 忘记密码链接 - 现代风格 */
+.forgot-password-modern {
+    text-align: right;
+    margin-top: -8px;
+}
+
+.forgot-password-modern a {
+    color: #667eea;
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.forgot-password-modern a:hover {
+    color: #764ba2;
+}
+
+/* 现代化主按钮 */
+.btn-modern-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-modern-primary:active {
+    transform: translateY(0);
+}
+
+/* 现代化次要按钮 */
+.btn-modern-secondary {
+    width: 100%;
+    padding: 14px;
+    background: #f5f5f5;
+    color: #333;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-modern-secondary:hover {
+    background: #e8e8e8;
+    border-color: #d0d0d0;
+}
+
+/* 分割线 */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 8px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.auth-divider span {
+    padding: 0 16px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 32px 24px;
+        max-width: 100%;
+    }
+    
+    .auth-logo h1 {
+        font-size: 28px;
+    }
+    
+    .auth-header h2 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+    
+    .verify-code-wrapper {
+        flex-direction: column;
+    }
+    
+    .code-btn {
+        width: 100%;
+    }
+}
+
+/* 聚焦动画效果 */
+.modern-input:focus {
+    animation: inputFocus 0.3s ease;
+}
+
+@keyframes inputFocus {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 按钮点击波纹效果 */
+.btn-modern-primary,
+.btn-modern-secondary,
+.code-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-modern-primary::after,
+.btn-modern-secondary::after,
+.code-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-modern-primary:active::after,
+.btn-modern-secondary:active::after,
+.code-btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* 加载动画 */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+.btn-primary {
+    background: #1890ff;
+    color: white;
+}
+
+.btn-secondary {
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd !important;
+}
+
+/* 主页面 */
+#mainPage {
+    background: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: white;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.user-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.logout-btn {
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.header h1 {
+    text-align: center;
+    margin: 10px 0;
+    color: #333;
+}
+
+/* 选择信息提示 */
+.selection-info {
+    text-align: center;
+    margin: 10px 0;
+    padding: 8px;
+    background: #e6f7ff;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #1890ff;
+}
+
+/* 搜索栏样式 */
+.search-bar {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 5px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.search-bar button {
+    padding: 10px 15px;
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.search-bar .btn-secondary {
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+/* 响应式设计 - 优化移动端显示 */
+@media (max-width: 768px) {
+    /* 移动端背景优化 */
+    #splashPage, #loginPage, #registerPage {
+        background-attachment: scroll;
+        background-size: cover;
+        background-position: center;
+    }
+    
+    .quote-card {
+        width: 280px;
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    .login-container {
+        width: 280px;
+        padding: 30px;
+        margin: 15px;
+    }
+    
+    .search-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .search-bar input {
+        min-width: 100%;
+        order: 1;
+    }
+    
+    .search-bar button {
+        flex: 1;
+        order: 2;
+    }
+    
+    .search-bar .btn-secondary {
+        flex: 1;
+        order: 3;
+    }
+    
+    /* 移动端播放控制面板优化 */
+    .playback-control-panel {
+        padding: 15px;
+    }
+    
+    .playback-modes {
+        gap: 10px;
+    }
+    
+    .playback-mode-option {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+    }
+    
+    .mode-desc {
+        width: 100%;
+        margin-left: 40px;
+        margin-top: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quote-card {
+        width: 250px;
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .login-container {
+        width: 250px;
+        padding: 25px;
+        margin: 10px;
+    }
+    
+    .quote-content {
+        font-size: 15px;
+    }
+    
+    .book-card {
+        width: 130px;
+        height: 150px;
+    }
+    
+    .add-book-card {
+        width: 130px;
+        height: 150px;
+    }
+}
+
+/* 超宽屏优化 */
+@media (min-width: 1920px) {
+    .quote-card {
+        width: 380px;
+        padding: 40px;
+    }
+    
+    .login-container {
+        width: 350px;
+        padding: 50px;
+    }
+    
+    .quote-content {
+        font-size: 18px;
+    }
+}
+
+/* 横屏手机优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+    #splashPage, #loginPage, #registerPage {
+        padding: 10px 0;
+    }
+    
+    .quote-card, .login-container {
+        margin: 10px;
+        transform: scale(0.9);
+    }
+}
+
+/* 书籍网格 */
+.book-shelf {
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.books-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+}
+
+.book-card {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    width: 140px;
+    height: 160px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+/* 书籍勾选框 */
+.book-selection {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* 选中状态的书籍卡片 */
+.book-card.selected {
+    border: 2px solid #1890ff;
+    background: #f0f8ff;
+}
+
+.book-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+.delete-book-btn {
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 封面上传区域样式 */
+.cover-upload-section {
+    margin: 15px 0;
+}
+
+.cover-upload-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
+
+.cover-hint {
+    font-size: 12px;
+    color: #999;
+    margin: 8px 0 5px 0;
+}
+
+.cover-upload-section input[type="file"] {
+    width: 100%;
+    margin: 5px 0;
+}
+
+/* 语录元数据区域样式 */
+.quote-metadata {
+    margin: 10px 0;
+}
+
+.quote-metadata input {
+    margin-bottom: 8px;
+}
+
+/* 书籍卡片封面样式 */
+.book-cover {
+    width: 80px;
+    height: 100px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #f0f0f0;
+    display: block;
+}
+
+/* 语录标签样式 */
+.quote-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.quote-tag {
+    background: #e6f7ff;
+    color: #1890ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    border: 1px solid #91d5ff;
+}
+
+/* 语录页码样式 */
+.quote-page {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* 编辑按钮样式 */
+.edit-book-btn,
+.edit-quote-btn {
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+/* 书籍内容区域调整 */
+.book-content {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(100% - 25px);
+}
+
+.book-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.book-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.book-author {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.quote-count {
+    color: #1890ff;
+    font-size: 11px;
+    text-align: center;
+}
+
+.add-book-card {
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    width: 140px;
+    height: 160px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-book-icon {
+    font-size: 2em;
+    color: #1890ff;
+    margin-bottom: 10px;
+}
+
+/* 语录管理页 */
+#quotesPage {
+    background: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #333;
+    padding: 5px 10px;
+}
+
+.quotes-management {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* 播放控制面板样式 */
+.playback-control-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.playback-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.playback-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.playback-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+}
+
+.playback-modes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.playback-mode-option {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.playback-mode-option:hover {
+    background: white;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.playback-mode-option input[type="radio"] {
+    margin-right: 12px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.playback-mode-option input[type="radio"]:checked {
+    accent-color: #667eea;
+}
+
+.playback-mode-option:has(input:checked) {
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.mode-icon {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.mode-label {
+    font-weight: 600;
+    color: #333;
+    margin-right: 8px;
+    min-width: 80px;
+}
+
+.mode-desc {
+    font-size: 12px;
+    color: #666;
+    flex: 1;
+}
+
+.selection-summary {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: white;
+    font-size: 13px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.selection-summary strong {
+    color: #ffd700;
+}
+
+.quotes-list {
+    margin-bottom: 20px;
+}
+
+.quote-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 4px solid #1890ff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.quote-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transform: translateX(5px);
+}
+
+/* 语录选择框 */
+.quote-checkbox {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.quote-checkbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* 语录序号 */
+.quote-number {
+    position: absolute;
+    top: 15px;
+    left: 40px;
+    background: #1890ff;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* 选中状态的语录 */
+.quote-item.selected {
+    border-left-color: #52c41a;
+    background: #f6ffed;
+}
+
+.quote-item.selected .quote-number {
+    background: #52c41a;
+}
+
+/* 调整语录内容区域，为复选框和序号留出空间 */
+.quote-content-wrapper {
+    flex: 1;
+    margin-left: 70px;
+    margin-right: 10px;
+}
+
+.quote-text {
+    flex: 1;
+    margin-right: 10px;
+    line-height: 1.5;
+}
+
+.quote-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.delete-quote-btn {
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.add-quote-btn {
+    width: 100%;
+    padding: 12px;
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 模态框 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    margin: 20px;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-content textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .quote-card, .login-container {
+        border-width: 0.5px;
+    }
+}

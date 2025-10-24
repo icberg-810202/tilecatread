@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bwhisper</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase 客户端库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* 密码强度指示器样式 */
+        .password-strength {
+            height: 5px;
+            margin: 5px 0 10px 0;
+            border-radius: 3px;
+            background: #eee;
+            display: none;
+        }
+        .strength-weak {
+            width: 33%;
+            height: 100%;
+            background: #ff4d4f;
+        }
+        .strength-medium {
+            width: 66%;
+            height: 100%;
+            background: #faad14;
+        }
+        .strength-strong {
+            width: 100%;
+            height: 100%;
+            background: #52c41a;
+        }
+        .strength-text {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 启动页 -->
+    <div id="splashPage" class="page">
+        <div class="quote-card">
+            <div class="quote-content" id="splashQuoteContent">
+                <!-- 语录内容 -->
+            </div>
+            <div class="quote-source" id="splashQuoteSource">
+                <!-- 书籍信息 -->
+            </div>
+            <div class="countdown">
+                <span id="countdown">10</span>秒后进入登录页
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户登录页 -->
+    <div id="loginPage" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <h1>📚 Bwhisper</h1>
+            </div>
+            <div class="auth-subtitle">欢迎回来，请登录您的账户</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="username" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="password" placeholder="密码" class="modern-input">
+                </div>
+                <div class="forgot-password-modern">
+                    <a href="javascript:void(0)" onclick="showForgotPassword()">忘记密码？</a>
+                </div>
+                <button onclick="login()" class="btn-modern-primary">登录</button>
+                <div class="auth-divider">
+                    <span>或</span>
+                </div>
+                <button onclick="showRegister()" class="btn-modern-secondary">注册新账户</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户注册页 -->
+    <div id="registerPage" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToLogin()" class="back-icon">←</button>
+                <h2>注册账户</h2>
+            </div>
+            <div class="auth-subtitle">创建您的阅读笔记账户</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="regUsername" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="regPassword" placeholder="密码（至少6位，包含字母和数字）" class="modern-input">
+                </div>
+                <div class="password-strength-modern" id="regPasswordStrength">
+                    <div class="strength-bar-container">
+                        <div id="strengthBar" class="strength-bar"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="regConfirmPassword" placeholder="确认密码" class="modern-input">
+                </div>
+                <button onclick="register()" class="btn-modern-primary">注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 忘记密码 - 第一步：验证手机号 -->
+    <div id="forgotPasswordStep1" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToLogin()" class="back-icon">←</button>
+                <h2>重置密码</h2>
+            </div>
+            <div class="auth-subtitle">请输入您的手机号，我们将发送验证码</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="resetPhone" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="verify-code-wrapper">
+                    <input type="text" id="verifyCode" placeholder="请输入验证码" maxlength="6" class="modern-input">
+                    <button onclick="sendVerifyCode()" id="sendCodeBtn" class="code-btn">获取验证码</button>
+                </div>
+                <button onclick="verifyCodeAndNext()" class="btn-modern-primary">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 忘记密码 - 第二步：设置新密码 -->
+    <div id="forgotPasswordStep2" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToStep1()" class="back-icon">←</button>
+                <h2>设置新密码</h2>
+            </div>
+            <div class="auth-subtitle">请设置您的新密码</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="password" id="newPassword" placeholder="请输入新密码（至少6位，包含字母和数字）" class="modern-input">
+                </div>
+                <div class="password-strength-modern" id="resetPasswordStrength">
+                    <div class="strength-bar-container">
+                        <div id="resetStrengthBar" class="strength-bar"></div>
+                    </div>
+                    <div class="strength-text" id="resetStrengthText"></div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="confirmNewPassword" placeholder="请再次输入新密码" class="modern-input">
+                </div>
+                <button onclick="resetPassword()" class="btn-modern-primary">完成重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的书库主页 -->
+    <div id="mainPage" class="page hidden">
+        <header class="header">
+            <div class="user-info">
+                <span id="currentUser">用户</span>
+                <button onclick="logout()" class="logout-btn">退出</button>
+            </div>
+            <h1>📚 我的书库</h1>
+            <div class="selection-info" id="selectionInfo">
+                <!-- 选择信息提示 -->
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索书名或作者...">
+                <button onclick="performSearch()">搜索</button>
+                <button onclick="backToLibrary()" class="btn-secondary">返回书库</button>
+            </div>
+        </header>
+
+        <main class="book-shelf">
+            <div class="books-grid" id="booksGrid">
+                <!-- 书籍卡片 -->
+            </div>
+            
+            <div class="add-book-card" onclick="showAddBookModal()">
+                <div class="add-book-icon">+</div>
+                <p>添加新书</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 语录管理页 -->
+    <div id="quotesPage" class="page hidden">
+        <header class="header">
+            <button onclick="backToMain()" class="back-btn">← 返回</button>
+            <h2 id="currentBookTitle">书籍语录管理</h2>
+        </header>
+        
+        <div class="quotes-management">
+            <!-- 播放模式控制面板 -->
+            <div class="playback-control-panel">
+                <div class="playback-header">
+                    <span class="playback-title">🎵 语录播放设置</span>
+                    <span class="playback-hint" id="playbackHint">选择播放模式，启动页将按模式显示语录</span>
+                </div>
+                <div class="playback-modes">
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="sequential" onclick="changePlaybackMode('sequential')">
+                        <span class="mode-icon">▶️</span>
+                        <span class="mode-label">顺序播放</span>
+                        <span class="mode-desc">按顺序显示选中的语录</span>
+                    </label>
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="random" onclick="changePlaybackMode('random')">
+                        <span class="mode-icon">🔀</span>
+                        <span class="mode-label">随机播放</span>
+                        <span class="mode-desc">随机显示选中的语录</span>
+                    </label>
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="single" onclick="changePlaybackMode('single')">
+                        <span class="mode-icon">🔂</span>
+                        <span class="mode-label">单条重复</span>
+                        <span class="mode-desc">重复显示选中的一条语录</span>
+                    </label>
+                </div>
+                <div class="selection-summary" id="selectionSummary">
+                    <!-- 选择统计信息 -->
+                </div>
+            </div>
+            
+            <div class="quotes-list" id="quotesList">
+                <!-- 语录列表 -->
+            </div>
+            <button onclick="showAddQuoteModal()" class="add-quote-btn">+ 添加语录</button>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 添加新书模态框 -->
+    <div id="addBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加新书</h3>
+            <input type="text" id="newBookName" placeholder="书籍名称">
+            <input type="text" id="newBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="addNewBook()" class="btn-primary">保存</button>
+                <button onclick="closeAddBookModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="editBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>编辑书籍信息</h3>
+            <input type="hidden" id="editBookIndex">
+            <input type="text" id="editBookName" placeholder="书籍名称">
+            <input type="text" id="editBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="saveBookEdit()" class="btn-primary">保存</button>
+                <button onclick="closeEditBookModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addQuoteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加语录</h3>
+            <textarea id="newQuoteText" placeholder="输入语录内容..."></textarea>
+            <div class="quote-metadata">
+                <input type="text" id="newQuotePage" placeholder="页码（可选）">
+                <input type="text" id="newQuoteTag" placeholder="标签（可选，用逗号分隔）">
+            </div>
+            <div class="modal-actions">
+                <button onclick="addNewQuote()" class="btn-primary">保存</button>
+                <button onclick="closeAddQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editQuoteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>编辑语录</h3>
+            <input type="hidden" id="editQuoteIndex">
+            <textarea id="editQuoteText" placeholder="输入语录内容..."></textarea>
+            <div class="quote-metadata">
+                <input type="text" id="editQuotePage" placeholder="页码（可选）">
+                <input type="text" id="editQuoteTag" placeholder="标签（可选，用逗号分隔）">
+            </div>
+            <div class="modal-actions">
+                <button onclick="saveQuoteEdit()" class="btn-primary">保存</button>
+                <button onclick="closeEditQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase 配置和脚本 -->
+    <script src="supabase-config.js"></script>
+    <script src="playback-controller.js"></script>
+    <script src="script-supabase.js"></script>
+</body>
+</html>

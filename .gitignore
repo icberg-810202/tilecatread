@@ -1,0 +1,30 @@
+# Supabase 配置文件（包含敏感信息）
+supabase-config.js
+
+# API Keys 配置
+supabase url and apikeys/
+
+# 本地测试文件
+test-*.html
+debug-*.html
+
+# 文档草稿
+*.draft.md
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+npm-debug.log*
+
+# 依赖目录
+node_modules/
