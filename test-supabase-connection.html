@@ -139,8 +139,9 @@
         // 1. 检查 Supabase SDK
         function checkSupabaseSDK() {
             const status = document.getElementById('sdkStatus');
-            if (typeof window.supabase === 'undefined' && typeof createClient === 'undefined') {
-                status.innerHTML = '<span class="status error">✗ 失败</span> Supabase SDK 未加载';
+            // Supabase v2 SDK 导出为 window.supabase.createClient
+            if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+                status.innerHTML = '<span class="status error">✗ 失败</span> Supabase SDK 未加载<br><small style="color: #666;">请检查 CDN 连接或网络环境</small>';
                 return false;
             }
             status.innerHTML = '<span class="status success">✓ 成功</span> Supabase SDK 已加载';
