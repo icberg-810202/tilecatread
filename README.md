@@ -2,6 +2,9 @@
 
 一个优雅的个人阅读语录收藏和管理应用，支持本地存储和云端同步两种模式。
 
+> **重要更新**：由于 Supabase 免费项目会因不活跃而暂停，我们已迁移到 Firebase Realtime Database，
+> 提供永久免费且不会因不活跃而暂停的服务。
+
 ---
 
 ## ✨ 主要特性
@@ -31,37 +34,39 @@
 
 ✅ 开箱即用，无需任何配置！
 
-### 方式二：Supabase 云端版本（推荐）
+### 方式二：Firebase 云端版本（推荐）
 
 1. 下载项目文件
-2. 按照 [QUICKSTART.md](./QUICKSTART.md) 完成 5 分钟配置
+2. 按照 [FIREBASE_COMPLETE_MIGRATION_GUIDE.md](./FIREBASE_COMPLETE_MIGRATION_GUIDE.md) 完成 Firebase 配置
 3. 享受云端同步功能！
 
-✅ 支持多设备同步，数据永不丢失！
+✅ 支持多设备同步，数据永不丢失，项目永不暂停！
 
 ---
 
 ## 📖 文档
 
-- **[快速开始指南](./QUICKSTART.md)** - 5分钟配置 Supabase 云端同步
+- **[Firebase 迁移完整指南](./FIREBASE_COMPLETE_MIGRATION_GUIDE.md)** - Firebase 配置与迁移指南
+- **[快速开始指南](./QUICKSTART.md)** - 5分钟配置 Supabase 云端同步（已弃用）
 - **[手机号验证功能说明](./PHONE_VERIFICATION_GUIDE.md)** - 手机号登录与密码重置指南
 - **[DeepSeek 风格设计文档](./DESIGN_UPDATE.md)** - 现代化 UI 设计说明（新增！）
-- **[详细配置说明](./SUPABASE_SETUP.md)** - Supabase 完整配置教程
+- **[详细配置说明](./SUPABASE_SETUP.md)** - Supabase 完整配置教程（已弃用）
 - **[版本切换指南](./VERSION_SWITCH.md)** - 如何在本地和云端版本间切换
-- **[数据库初始化脚本](./supabase-init.sql)** - SQL 初始化脚本
+- **[数据库初始化脚本](./supabase-init.sql)** - SQL 初始化脚本（Supabase 版本）
 
 ---
 
 ## 🎯 功能对比
 
-| 功能 | 本地版本 | Supabase版本 |
+| 功能 | 本地版本 | Firebase版本 |
 |------|---------|-------------|
-| 💾 数据存储 | localStorage | ☁️ Supabase + localStorage |
+| 💾 数据存储 | localStorage | ☁️ Firebase + localStorage |
 | 🔄 多设备同步 | ❌ | ✅ |
 | 📴 离线使用 | ✅ | ✅ |
 | 🔒 数据安全 | 清除浏览器会丢失 | ✅ 云端持久化 |
-| ⚙️ 配置难度 | 无需配置 | 5分钟配置 |
+| ⚙️ 配置难度 | 无需配置 | 简单配置 |
 | 🌐 网络依赖 | 不需要 | 首次同步需要 |
+| 🚫 项目暂停 | 不适用 | 永不暂停 |
 
 ---
 
@@ -168,11 +173,12 @@
 - 📴 经常离线使用
 - ⚡ 追求极致性能
 
-### 选择 Supabase 版本如果你：
+### 选择 Firebase 版本如果你：
 - 📱 在多台设备使用
 - ☁️ 需要数据云端备份
 - 🔄 需要数据同步
 - 👥 未来可能需要分享功能
+- 🚫 不希望项目因不活跃而暂停
 
 ---
 

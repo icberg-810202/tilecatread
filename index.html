@@ -6,8 +6,9 @@
     <title>Bwhisper</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- Supabase 客户端库 - 使用多个 CDN 备用 -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         /* 密码强度指示器样式 */
@@ -292,10 +293,9 @@
         </div>
     </div>
 
-    <!-- Supabase 配置和脚本 -->
-    <!-- 使用 Netlify 专用配置文件（适用于生产环境和本地开发） -->
-    <script src="supabase-config-netlify.js"></script>
+    <!-- Firebase 配置和脚本 -->
+    <script src="firebase-config.js"></script>
     <script src="playback-controller.js"></script>
-    <script src="script-supabase.js"></script>
+    <script src="script-firebase.js"></script>
 </body>
 </html>

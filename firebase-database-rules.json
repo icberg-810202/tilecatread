@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "books": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userId"]
+    },
+    "quotes": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["bookId"]
+    },
+    "user_settings": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId"
+      }
+    }
+  }
+}
