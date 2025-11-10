@@ -1,7 +1,23 @@
 // LeanCloud 数据访问层
 
+// 检查 LeanCloud 是否已初始化
+function checkLeanCloudInitialized() {
+  if (typeof LEANCLOUD_CONFIG === 'undefined' || typeof LEANCLOUD_CONFIG.AV === 'undefined') {
+    console.error('❌ LeanCloud 未初始化，请检查 SDK 是否正确加载');
+    return false;
+  }
+  return true;
+}
+
 // 用户注册
 async function registerUser(phone, password) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 检查手机号是否已存在
     const query = new LEANCLOUD_CONFIG.AV.Query('_User');
@@ -38,6 +54,13 @@ async function registerUser(phone, password) {
 
 // 用户登录
 async function loginUser(phone, password) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     const user = await LEANCLOUD_CONFIG.AV.User.logIn(phone, password);
     
@@ -59,6 +82,13 @@ async function loginUser(phone, password) {
 
 // 添加书籍
 async function addBook(userId, title, author) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -95,6 +125,13 @@ async function addBook(userId, title, author) {
 
 // 添加语录
 async function addQuote(bookId, content, page, tags) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -144,6 +181,13 @@ async function addQuote(bookId, content, page, tags) {
 
 // 获取用户书籍
 async function getUserBooks(userId) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -180,6 +224,13 @@ async function getUserBooks(userId) {
 
 // 获取书籍语录
 async function getBookQuotes(bookId) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -228,6 +279,14 @@ async function getBookQuotes(bookId) {
 
 // 获取随机语录（用于启动页）
 async function getRandomQuotes(limit = 5) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    // 返回空数组而不是错误，以保持启动页正常工作
+    return {
+      success: true,
+      data: []
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -273,6 +332,13 @@ async function getRandomQuotes(limit = 5) {
 
 // 更新播放模式
 async function updatePlaybackMode(userId, mode) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    return {
+      success: false,
+      message: '系统初始化失败，请刷新页面重试'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();
@@ -298,6 +364,14 @@ async function updatePlaybackMode(userId, mode) {
 
 // 获取用户播放模式
 async function getUserPlaybackMode(userId) {
+  // 检查初始化
+  if (!checkLeanCloudInitialized()) {
+    // 返回默认模式而不是错误，以保持功能正常
+    return {
+      success: true,
+      data: 'random'
+    };
+  }
   try {
     // 获取当前用户
     const user = LEANCLOUD_CONFIG.AV.User.current();

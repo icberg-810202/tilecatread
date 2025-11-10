@@ -6,8 +6,8 @@
     <title>Bwhisper</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- LeanCloud SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@5.0.0/dist/browser/lc.min.js"></script>
+    <!-- LeanCloud SDK - 使用多个 CDN 备用 -->
+    <script src="https://unpkg.com/leancloud-storage@5.0.0/dist/browser/lc.min.js" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/leancloud-storage@5.0.0/dist/browser/lc.min.js'"></script>
     
     <style>
         /* 密码强度指示器样式 */
@@ -296,5 +296,23 @@
     <script src="leancloud-config.js"></script>
     <script src="playback-controller.js"></script>
     <script src="script-leancloud.js"></script>
+    
+    <!-- 错误处理 -->
+    <script>
+        // 检查 LeanCloud 是否初始化成功
+        window.addEventListener('load', function() {
+            // 延迟检查，确保初始化完成
+            setTimeout(function() {
+                if (typeof LEANCLOUD_CONFIG === 'undefined') {
+                    console.warn('LeanCloud 初始化失败，可能影响部分功能');
+                    // 显示友好的错误提示
+                    const currentUserElement = document.getElementById('currentUser');
+                    if (currentUserElement) {
+                        currentUserElement.textContent = '离线模式';
+                    }
+                }
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
