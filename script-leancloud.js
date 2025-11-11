@@ -96,12 +96,13 @@ async function addBook(userId, title, author) {
       throw new Error('请先登录');
     }
     
-    // 创建书籍对象
-    const Book = LEANCLOUD_CONFIG.AV.Object.extend('Book');
+    // 创建书籍对象 - 使用新的表名
+    const Book = LEANCLOUD_CONFIG.AV.Object.extend('Bwhipser_database');
     const book = new Book();
     book.set('title', title);
     book.set('author', author);
     book.set('user', user);
+    book.set('type', 'book'); // 添加类型标识
     
     const result = await book.save();
     
@@ -139,24 +140,15 @@ async function addQuote(bookId, content, page, tags) {
       throw new Error('请先登录');
     }
     
-    // 查询书籍
-    const Book = LEANCLOUD_CONFIG.AV.Object.extend('Book');
-    const bookQuery = new LEANCLOUD_CONFIG.AV.Query(Book);
-    bookQuery.equalTo('objectId', bookId);
-    const book = await bookQuery.first();
-    
-    if (!book) {
-      throw new Error('书籍不存在');
-    }
-    
-    // 创建语录对象
-    const Quote = LEANCLOUD_CONFIG.AV.Object.extend('Quote');
+    // 创建语录对象 - 使用新的表名
+    const Quote = LEANCLOUD_CONFIG.AV.Object.extend('Bwhipser_database');
     const quote = new Quote();
     quote.set('content', content);
     quote.set('page', page);
     quote.set('tags', tags);
-    quote.set('book', book);
     quote.set('user', user);
+    quote.set('type', 'quote'); // 添加类型标识
+    quote.set('bookId', bookId); // 关联书籍ID
     
     const result = await quote.save();
     
@@ -195,10 +187,11 @@ async function getUserBooks(userId) {
       throw new Error('请先登录');
     }
     
-    // 查询书籍
-    const Book = LEANCLOUD_CONFIG.AV.Object.extend('Book');
-    const query = new LEANCLOUD_CONFIG.AV.Query(Book);
+    // 查询书籍 - 使用新的表名和类型过滤
+    const BwhipserData = LEANCLOUD_CONFIG.AV.Object.extend('Bwhipser_database');
+    const query = new LEANCLOUD_CONFIG.AV.Query(BwhipserData);
     query.equalTo('user', user);
+    query.equalTo('type', 'book'); // 只查询书籍类型
     query.descending('createdAt');
     
     const books = await query.find();
@@ -238,21 +231,12 @@ async function getBookQuotes(bookId) {
       throw new Error('请先登录');
     }
     
-    // 查询书籍
-    const Book = LEANCLOUD_CONFIG.AV.Object.extend('Book');
-    const bookQuery = new LEANCLOUD_CONFIG.AV.Query(Book);
-    bookQuery.equalTo('objectId', bookId);
-    const book = await bookQuery.first();
-    
-    if (!book) {
-      throw new Error('书籍不存在');
-    }
-    
-    // 查询语录
-    const Quote = LEANCLOUD_CONFIG.AV.Object.extend('Quote');
-    const query = new LEANCLOUD_CONFIG.AV.Query(Quote);
-    query.equalTo('book', book);
+    // 查询语录 - 使用新的表名和类型过滤
+    const BwhipserData = LEANCLOUD_CONFIG.AV.Object.extend('Bwhipser_database');
+    const query = new LEANCLOUD_CONFIG.AV.Query(BwhipserData);
     query.equalTo('user', user);
+    query.equalTo('type', 'quote'); // 只查询语录类型
+    query.equalTo('bookId', bookId); // 关联书籍ID
     query.descending('createdAt');
     
     const quotes = await query.find();
@@ -298,10 +282,11 @@ async function getRandomQuotes(limit = 5) {
       };
     }
     
-    // 查询语录
-    const Quote = LEANCLOUD_CONFIG.AV.Object.extend('Quote');
-    const query = new LEANCLOUD_CONFIG.AV.Query(Quote);
+    // 查询语录 - 使用新的表名和类型过滤
+    const BwhipserData = LEANCLOUD_CONFIG.AV.Object.extend('Bwhipser_database');
+    const query = new LEANCLOUD_CONFIG.AV.Query(BwhipserData);
     query.equalTo('user', user);
+    query.equalTo('type', 'quote'); // 只查询语录类型
     query.limit(limit * 2); // 多获取一些用于随机选择
     
     const quotes = await query.find();

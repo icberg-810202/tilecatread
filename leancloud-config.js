@@ -12,9 +12,9 @@ function initLeanCloud() {
   }
   
   const LEANCLOUD_CONFIG = {
-    appId: 'oHZ2QKJRrp64Yn7idBPU1pXwd4GPTbPU29lKbQGE81s57YPwZqZo7izIUPywVcGd',
-    appKey: '-cn-n1',
-    serverURL: 'https://ohz2qkjr.lc-cn-n1-shared.com'
+    appId: 'EeNvUrhhjnQRJoRfMxqE8Qxh-MdYXbMMI',
+    appKey: 'R3oHn9jLLOt88EgFqk9lSAc9',
+    serverURL: 'https://eenvurhh.api.lncldglobal.com'
   };
 
   try {

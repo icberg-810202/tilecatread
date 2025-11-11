@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%),
+                        url('./images/background.jpg') center/cover no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .quote-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            width: 320px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .quote-content {
+            font-size: 22px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .quote-source {
+            text-align: right;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .countdown {
+            text-align: center;
+            color: #1890ff;
+            font-size: 14px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
+        }
+        
+        .countdown span {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- 启动页 -->
+    <div id="splashPage" class="page">
+        <div class="quote-card">
+            <div class="quote-content" id="splashQuoteContent">
+                "书中自有黄金屋，书中自有颜如玉。"
+            </div>
+            <div class="quote-source" id="splashQuoteSource">
+                古训
+            </div>
+            <div class="countdown">
+                <span id="countdown">10</span>秒后进入登录页
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的倒计时实现
+        let seconds = 10;
+        const countdownElement = document.getElementById('countdown');
+        
+        function updateCountdown() {
+            seconds--;
+            if (countdownElement) {
+                countdownElement.textContent = seconds.toString();
+            }
+            console.log('倒计时更新:', seconds);
+            
+            if (seconds <= 0) {
+                console.log('倒计时结束');
+                alert('倒计时结束！'); // 用alert代替跳转以便测试
+            } else {
+                // 继续倒计时
+                setTimeout(updateCountdown, 1000);
+            }
+        }
+        
+        // 页面加载完成后启动倒计时
+        window.onload = function() {
+            console.log('页面加载完成，开始倒计时');
+            updateCountdown();
+        };
+    </script>
+</body>
+</html>

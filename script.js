@@ -88,7 +88,7 @@ const authorDatabase = [
 
 // 配置标志，用于快速切换数据存储模式
 const STORAGE_CONFIG = {
-    useLocalStorageOnly: true, // 设置为true表示仅使用本地存储
+    useLocalStorageOnly: false, // 设置为false表示使用LeanCloud存储
     debug: true // 启用调试日志
 };
 
@@ -356,9 +356,27 @@ function login() {
         return;
     }
     
-    // 直接使用本地登录功能，不再依赖COZE API
-    console.log('使用本地登录功能');
-    localLogin(username, password);
+    if (STORAGE_CONFIG.useLocalStorageOnly) {
+        console.log('使用本地登录功能');
+        localLogin(username, password);
+    } else {
+        console.log('使用LeanCloud登录功能');
+        loginUser(username, password)
+            .then(result => {
+                if (result.success) {
+                    currentUserUid = result.data.id;
+                    currentUser = { phone: result.data.phone, id: result.data.id };
+                    console.log('✅ 登录成功，正在加载用户数据...');
+                    showPage('mainPage');
+                } else {
+                    alert(result.message || '登录失败');
+                }
+            })
+            .catch(error => {
+                console.error('登录错误:', error);
+                alert('登录过程中发生错误，请重试');
+            });
+    }
 }
 
 // 尝试COZE API登录，支持重试
@@ -763,9 +781,25 @@ function register() {
         return;
     }
     
-    // 直接使用本地注册功能，不再依赖COZE API
-    console.log('使用本地注册功能');
-    localRegister(username, password);
+    // 根据配置决定使用本地存储还是LeanCloud注册
+    if (!STORAGE_CONFIG.useLocalStorageOnly) {
+        console.log('使用LeanCloud注册功能');
+        registerUser(username, password)
+            .then(user => {
+                console.log('LeanCloud注册成功:', user);
+                currentUserUid = user.objectId;
+                currentUser = { username: username };
+                // 显示主界面
+                showPage('mainPage');
+            })
+            .catch(error => {
+                console.error('LeanCloud注册失败:', error);
+                alert('注册失败: ' + error.message || '未知错误');
+            });
+    } else {
+        console.log('使用本地注册功能');
+        localRegister(username, password);
+    }
 }
 
 // 尝试COZE API注册，支持重试
@@ -1276,11 +1310,30 @@ function addNewBook() {
         selected: false
     };
     
-    userDatabase[currentUser].books.push(newBook);
-    saveUserDatabase();
-    closeAddBookModal();
-    renderBooksGrid();
-    updateSelectionInfo();
+    if (!STORAGE_CONFIG.useLocalStorageOnly && currentUserUid) {
+        // 使用LeanCloud存储
+        console.log('使用LeanCloud添加书籍');
+        addBook(newBook)
+            .then(book => {
+                console.log('书籍添加成功:', book);
+                // 刷新本地数据后更新UI
+                loadUserData(currentUserUid);
+                closeAddBookModal();
+                renderBooksGrid();
+                updateSelectionInfo();
+            })
+            .catch(error => {
+                console.error('书籍添加失败:', error);
+                alert('添加书籍失败: ' + error.message || '未知错误');
+            });
+    } else {
+        // 使用本地存储
+        userDatabase[currentUser].books.push(newBook);
+        saveUserDatabase();
+        closeAddBookModal();
+        renderBooksGrid();
+        updateSelectionInfo();
+    }
 }
 
 // 删除书籍
@@ -1430,10 +1483,29 @@ function addNewQuote() {
         tags: tags.length > 0 ? tags : null
     };
     
-    userDatabase[currentUser].books[currentBookIndex].quotes.push(newQuote);
-    saveUserDatabase();
-    closeAddQuoteModal();
-    renderQuotesList();
+    if (!STORAGE_CONFIG.useLocalStorageOnly && currentUserUid) {
+        // 使用LeanCloud存储
+        console.log('使用LeanCloud添加语录');
+        const book = userDatabase[currentUser].books[currentBookIndex];
+        addQuote(newQuote, book)
+            .then(quote => {
+                console.log('语录添加成功:', quote);
+                // 刷新本地数据后更新UI
+                loadUserData(currentUserUid);
+                closeAddQuoteModal();
+                renderQuotesList();
+            })
+            .catch(error => {
+                console.error('语录添加失败:', error);
+                alert('添加语录失败: ' + error.message || '未知错误');
+            });
+    } else {
+        // 使用本地存储
+        userDatabase[currentUser].books[currentBookIndex].quotes.push(newQuote);
+        saveUserDatabase();
+        closeAddQuoteModal();
+        renderQuotesList();
+    }
 }
 
 function deleteQuote(quoteIndex) {
@@ -1467,22 +1539,29 @@ function saveUserDatabase() {
     //         console.error('保存到COZE云数据库失败，仅保存到本地:', error);
     //     })
     //     .finally(() => {
-            // 2. 无论云端保存是否成功，都保存到本地存储作为备份
-            try {
-                localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
-                console.log('用户数据已保存到本地存储');
-            } catch (error) {
-                console.error('用户数据保存失败:', error);
-                alert('保存数据失败，请稍后重试');
-            }
-        });
+    //         // 2. 无论云端保存是否成功，都保存到本地存储作为备份
+    //         try {
+    //             localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
+    //             console.log('用户数据已保存到本地存储');
+    //         } catch (error) {
+    //             console.error('用户数据保存失败:', error);
+    //             alert('保存数据失败，请稍后重试');
+    //         }
+    //     });
 }
 
 // 全局变量，用于倒计时控制
-let timer = null;
+// let timer = null; // 这个变量已经在文件前面定义了
+// let countdown = 5; // 这个变量也在文件前面定义了
 
 // 跳转到登录页的全局函数
 function goToLoginPage() {
+    // 清除所有可能的定时器
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+    
     const splashPage = document.getElementById('splashPage');
     const loginPage = document.getElementById('loginPage');
     
@@ -1494,6 +1573,46 @@ function goToLoginPage() {
     if (typeof showPage === 'function') {
         showPage('loginPage');
     }
+}
+
+// 最简化的倒计时函数（保留作为后备）
+function startCountdown() {
+    console.log('开始简化倒计时');
+    
+    // 获取倒计时元素
+    const countdownElement = document.getElementById('countdown');
+    
+    // 设置初始值
+    if (countdownElement) {
+        countdownElement.textContent = '10';
+    }
+    
+    // 创建一个简单的倒计时数组
+    const countdownValues = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    let currentIndex = 0;
+    
+    // 使用setTimeout链式调用，避免setInterval可能的问题
+    function updateCountdown() {
+        if (currentIndex < countdownValues.length) {
+            const value = countdownValues[currentIndex];
+            if (countdownElement) {
+                countdownElement.textContent = value.toString();
+            }
+            console.log('倒计时:', value);
+            currentIndex++;
+            timer = setTimeout(updateCountdown, 1000);
+        } else {
+            // 倒计时结束，跳转到登录页
+            console.log('倒计时结束，跳转到登录页');
+            goToLoginPage();
+        }
+    }
+    
+    // 启动倒计时
+    timer = setTimeout(updateCountdown, 1000);
+    
+    // 绝对保障：无论如何，11秒后强制跳转
+    setTimeout(goToLoginPage, 11000);
 }
 
 // 初始化 - 修复关键问题
@@ -1597,27 +1716,10 @@ window.onload = function() {
                 renderBooksGrid();
                 updateSelectionInfo();
             }
-            }
-        } catch (e) {
-            console.error('初始化用户数据失败:', e);
-            // 创建默认数据
-            userDatabase[savedUsername] = {
-                books: []
-            };
-            
-            // 更新UI
-            if (document.getElementById('currentUser')) {
-                document.getElementById('currentUser').textContent = savedUsername;
-            }
-            if (typeof showPage === 'function') {
-                showPage('mainPage');
-            }
-            
-            // 渲染书籍列表
-            renderBooksGrid();
-            updateSelectionInfo();
         }
-    } else {
+    }
+    
+    if (!savedUsername) {
         // 用户未登录
         console.log('用户未登录');
         
@@ -1677,12 +1779,12 @@ window.onload = function() {
         // 立即加载语录
         loadRandomQuote();
         
-        // 设置倒计时初始值
-        let seconds = 5;
+        // 设置倒计时初始值为10秒
+        let seconds = 10;
         if (countdownElement) {
             countdownElement.textContent = seconds.toString();
         }
-        console.log('开始5秒倒计时');
+        console.log('开始10秒倒计时');
         
         // 创建一个简单的倒计时函数
         function updateCountdown() {
@@ -1701,17 +1803,16 @@ window.onload = function() {
             }
         }
         
-        // 启动倒计时
-        setTimeout(updateCountdown, 1000);
+        // 立即启动倒计时
+        updateCountdown();
         
-        // 安全保障：无论如何，6秒后强制跳转（额外1秒容错）
+        // 安全保障：无论如何，11秒后强制跳转（额外1秒容错）
         setTimeout(function() {
             console.log('安全保障：强制跳转到登录页');
             goToLoginPage();
-        }, 6000);
+        }, 11000);
         
         // 倒计时功能已完整实现，无需兼容性处理
-        }
     }
     
     // 添加跳过功能
@@ -1763,9 +1864,10 @@ window.onload = function() {
     }
     
     // 移除封面上传相关的事件监听器
-};
+}
 
 // 添加错误处理
 window.addEventListener('error', function(e) {
     console.error('全局错误:', e.error);
 });
+

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单倒计时测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .countdown-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        
+        .countdown-number {
+            font-size: 48px;
+            color: #1890ff;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .message {
+            font-size: 18px;
+            color: #333;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="countdown-card">
+        <h2>倒计时测试</h2>
+        <div class="countdown-number" id="countdown">10</div>
+        <div class="message">秒后自动跳转</div>
+        <button onclick="stopCountdown()">停止倒计时</button>
+    </div>
+
+    <script>
+        let seconds = 10;
+        let timer = null;
+        
+        function updateCountdown() {
+            seconds--;
+            document.getElementById('countdown').textContent = seconds;
+            console.log('倒计时:', seconds);
+            
+            if (seconds <= 0) {
+                console.log('倒计时结束');
+                alert('倒计时结束！');
+                stopCountdown();
+            } else {
+                timer = setTimeout(updateCountdown, 1000);
+            }
+        }
+        
+        function stopCountdown() {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        }
+        
+        // 页面加载完成后启动倒计时
+        window.onload = function() {
+            console.log('开始倒计时');
+            updateCountdown();
+        };
+    </script>
+</body>
+</html>

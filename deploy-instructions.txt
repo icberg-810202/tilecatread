@@ -1,0 +1,3 @@
+部署后请访问以下URL测试LeanCloud连接�?
+https://icberg-810202.github.io/tilecatread/test-github-connection.html 
+ 

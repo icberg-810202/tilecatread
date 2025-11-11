@@ -1,4 +1,4 @@
-﻿$port = 8080
+$port = 8083
 $url = "http://localhost:$port"
 Write-Host "Starting server at $url" -ForegroundColor Green
 $listener = New-Object System.Net.HttpListener

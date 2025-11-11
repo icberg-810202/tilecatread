@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bwhisper</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- LeanCloud SDK - 使用官方推荐的CDN -->
+    <script src="https://unpkg.com/leancloud-storage@4.13.0/dist/av-min.js"></script>
+    
+    <style>
+        /* 密码强度指示器样式 */
+        .password-strength {
+            height: 5px;
+            margin: 5px 0 10px 0;
+            border-radius: 3px;
+            background: #eee;
+            display: none;
+        }
+        .strength-weak {
+            width: 33%;
+            height: 100%;
+            background: #ff4d4f;
+        }
+        .strength-medium {
+            width: 66%;
+            height: 100%;
+            background: #faad14;
+        }
+        .strength-strong {
+            width: 100%;
+            height: 100%;
+            background: #52c41a;
+        }
+        .strength-text {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 启动页 -->
+    <div id="splashPage" class="page">
+        <div class="quote-card">
+            <div class="quote-content" id="splashQuoteContent">
+                <!-- 语录内容 -->
+            </div>
+            <div class="quote-source" id="splashQuoteSource">
+                <!-- 书籍信息 -->
+            </div>
+            <div class="countdown">
+                <span id="countdown">10</span>秒后进入登录页
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户登录页 -->
+    <div id="loginPage" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <h1>📚 Bwhisper</h1>
+            </div>
+            <div class="auth-subtitle">欢迎回来，请登录您的账户</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="username" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="password" placeholder="密码" class="modern-input">
+                </div>
+                <div class="forgot-password-modern">
+                    <a href="javascript:void(0)" onclick="showForgotPassword()">忘记密码？</a>
+                </div>
+                <button onclick="login()" class="btn-modern-primary">登录</button>
+                <div class="auth-divider">
+                    <span>或</span>
+                </div>
+                <button onclick="showRegister()" class="btn-modern-secondary">注册新账户</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户注册页 -->
+    <div id="registerPage" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToLogin()" class="back-icon">←</button>
+                <h2>注册账户</h2>
+            </div>
+            <div class="auth-subtitle">创建您的阅读笔记账户</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="regUsername" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="regPassword" placeholder="密码（至少6位，包含字母和数字）" class="modern-input">
+                </div>
+                <div class="password-strength-modern" id="regPasswordStrength">
+                    <div class="strength-bar-container">
+                        <div id="strengthBar" class="strength-bar"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="regConfirmPassword" placeholder="确认密码" class="modern-input">
+                </div>
+                <button onclick="register()" class="btn-modern-primary">注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 忘记密码 - 第一步：验证手机号 -->
+    <div id="forgotPasswordStep1" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToLogin()" class="back-icon">←</button>
+                <h2>重置密码</h2>
+            </div>
+            <div class="auth-subtitle">请输入您的手机号，我们将发送验证码</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="tel" id="resetPhone" placeholder="手机号" maxlength="11" class="modern-input">
+                </div>
+                <div class="verify-code-wrapper">
+                    <input type="text" id="verifyCode" placeholder="请输入验证码" maxlength="6" class="modern-input">
+                    <button onclick="sendVerifyCode()" id="sendCodeBtn" class="code-btn">获取验证码</button>
+                </div>
+                <button onclick="verifyCodeAndNext()" class="btn-modern-primary">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 忘记密码 - 第二步：设置新密码 -->
+    <div id="forgotPasswordStep2" class="page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button onclick="backToStep1()" class="back-icon">←</button>
+                <h2>设置新密码</h2>
+            </div>
+            <div class="auth-subtitle">请设置您的新密码</div>
+            <div class="auth-form">
+                <div class="input-wrapper">
+                    <input type="password" id="newPassword" placeholder="请输入新密码（至少6位，包含字母和数字）" class="modern-input">
+                </div>
+                <div class="password-strength-modern" id="resetPasswordStrength">
+                    <div class="strength-bar-container">
+                        <div id="resetStrengthBar" class="strength-bar"></div>
+                    </div>
+                    <div class="strength-text" id="resetStrengthText"></div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="confirmNewPassword" placeholder="请再次输入新密码" class="modern-input">
+                </div>
+                <button onclick="resetPassword()" class="btn-modern-primary">完成重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的书库主页 -->
+    <div id="mainPage" class="page hidden">
+        <header class="header">
+            <div class="user-info">
+                <span id="currentUser">用户</span>
+                <button onclick="logout()" class="logout-btn">退出</button>
+            </div>
+            <h1>📚 我的书库</h1>
+            <div class="selection-info" id="selectionInfo">
+                <!-- 选择信息提示 -->
+            </div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索书名或作者...">
+                <button onclick="performSearch()">搜索</button>
+                <button onclick="backToLibrary()" class="btn-secondary">返回书库</button>
+            </div>
+        </header>
+
+        <main class="book-shelf">
+            <div class="books-grid" id="booksGrid">
+                <!-- 书籍卡片 -->
+            </div>
+            
+            <div class="add-book-card" onclick="showAddBookModal()">
+                <div class="add-book-icon">+</div>
+                <p>添加新书</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 语录管理页 -->
+    <div id="quotesPage" class="page hidden">
+        <header class="header">
+            <button onclick="backToMain()" class="back-btn">← 返回</button>
+            <h2 id="currentBookTitle">书籍语录管理</h2>
+        </header>
+        
+        <div class="quotes-management">
+            <!-- 播放模式控制面板 -->
+            <div class="playback-control-panel">
+                <div class="playback-header">
+                    <span class="playback-title">🎵 语录播放设置</span>
+                    <span class="playback-hint" id="playbackHint">选择播放模式，启动页将按模式显示语录</span>
+                </div>
+                <div class="playback-modes">
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="sequential" onclick="changePlaybackMode('sequential')">
+                        <span class="mode-icon">▶️</span>
+                        <span class="mode-label">顺序播放</span>
+                        <span class="mode-desc">按顺序显示选中的语录</span>
+                    </label>
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="random" onclick="changePlaybackMode('random')">
+                        <span class="mode-icon">🔀</span>
+                        <span class="mode-label">随机播放</span>
+                        <span class="mode-desc">随机显示选中的语录</span>
+                    </label>
+                    <label class="playback-mode-option">
+                        <input type="radio" name="playbackMode" value="single" onclick="changePlaybackMode('single')">
+                        <span class="mode-icon">🔂</span>
+                        <span class="mode-label">单条重复</span>
+                        <span class="mode-desc">重复显示选中的一条语录</span>
+                    </label>
+                </div>
+                <div class="selection-summary" id="selectionSummary">
+                    <!-- 选择统计信息 -->
+                </div>
+            </div>
+            
+            <div class="quotes-list" id="quotesList">
+                <!-- 语录列表 -->
+            </div>
+            <button onclick="showAddQuoteModal()" class="add-quote-btn">+ 添加语录</button>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 添加新书模态框 -->
+    <div id="addBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加新书</h3>
+            <input type="text" id="newBookName" placeholder="书籍名称">
+            <input type="text" id="newBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="addNewBook()" class="btn-primary">保存</button>
+                <button onclick="closeAddBookModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="editBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>编辑书籍信息</h3>
+            <input type="hidden" id="editBookIndex">
+            <input type="text" id="editBookName" placeholder="书籍名称">
+            <input type="text" id="editBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="saveBookEdit()" class="btn-primary">保存</button>
+                <button onclick="closeEditBookModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addQuoteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>添加语录</h3>
+            <textarea id="newQuoteText" placeholder="输入语录内容..."></textarea>
+            <div class="quote-metadata">
+                <input type="text" id="newQuotePage" placeholder="页码（可选）">
+                <input type="text" id="newQuoteTag" placeholder="标签（可选，用逗号分隔）">
+            </div>
+            <div class="modal-actions">
+                <button onclick="addNewQuote()" class="btn-primary">保存</button>
+                <button onclick="closeAddQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editQuoteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>编辑语录</h3>
+            <input type="hidden" id="editQuoteIndex">
+            <textarea id="editQuoteText" placeholder="输入语录内容..."></textarea>
+            <div class="quote-metadata">
+                <input type="text" id="editQuotePage" placeholder="页码（可选）">
+                <input type="text" id="editQuoteTag" placeholder="标签（可选，用逗号分隔）">
+            </div>
+            <div class="modal-actions">
+                <button onclick="saveQuoteEdit()" class="btn-primary">保存</button>
+                <button onclick="closeEditQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 应用脚本 -->
+    <script src="leancloud-config.js"></script>
+    <script src="playback-controller.js"></script>
+    <script src="script-leancloud.js"></script>
+    
+    <script>
+        // 作者数据库（只读）
+        const authorDatabase = [
+            { id: 1, book: '人间失格', author: '太宰治', quote: '我的不幸恰恰在于我缺乏拒绝的能力，我害怕一旦拒绝别人，便会在彼此心里留下永远无法愈合的裂痕。' },
+            { id: 2, book: '小王子', author: '安托万·德·圣-埃克苏佩里', quote: '所有的大人都曾经是小孩，虽然，只有少数的人记得。' },
+            { id: 3, book: '活着', author: '余华', quote: '人是为了活着本身而活着，而不是为了活着之外的任何事物而活着。' },
+            { id: 4, book: '百年孤独', author: '加西亚·马尔克斯', quote: '过去都是假的，回忆是一条没有归途的路。' },
+            { id: 5, book: '围城', author: '钱钟书', quote: '婚姻是一座围城，城外的人想进去，城里的人想出来。' }
+        ];
+
+        // 全局变量
+        let timer = null;
+        let currentUser = null;
+        let userDatabase = {};
+
+        // 页面切换
+        function showPage(pageId) {
+            console.log('切换到页面:', pageId);
+            
+            // 隐藏所有页面
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // 显示指定页面
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            } else {
+                console.error('找不到页面:', pageId);
+            }
+        }
+
+        // 跳转到登录页面
+        function goToLoginPage() {
+            console.log('跳转到登录页面');
+            // 清除所有可能的定时器
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            
+            // 直接隐藏启动页并显示登录页
+            const splashPage = document.getElementById('splashPage');
+            const loginPage = document.getElementById('loginPage');
+            
+            if (splashPage) splashPage.classList.add('hidden');
+            if (loginPage) loginPage.classList.remove('hidden');
+            
+            // 同时调用原来的showPage函数确保其他功能正常
+            if (typeof showPage === 'function') {
+                showPage('loginPage');
+            }
+        }
+
+        // 启动页倒计时功能
+        function startSplashCountdown() {
+            console.log('启动启动页倒计时');
+            
+            // 获取倒计时元素
+            const countdownElement = document.getElementById('countdown');
+            const quoteContent = document.getElementById('splashQuoteContent');
+            const quoteSource = document.getElementById('splashQuoteSource');
+            
+            // 加载随机语录
+            if (window.authorDatabase && authorDatabase.length > 0) {
+                const randomIndex = Math.floor(Math.random() * authorDatabase.length);
+                const quote = authorDatabase[randomIndex];
+                
+                if (quoteContent) {
+                    quoteContent.textContent = `"${quote.quote}"`;
+                }
+                if (quoteSource) {
+                    quoteSource.textContent = `——《${quote.book}》${quote.author}`;
+                }
+                console.log('已加载语录:', quote.quote);
+            } else {
+                console.error('语录数据库不存在或为空');
+                if (quoteContent) {
+                    quoteContent.textContent = '"书中自有黄金屋，书中自有颜如玉。"';
+                }
+                if (quoteSource) {
+                    quoteSource.textContent = '古训';
+                }
+            }
+            
+            // 设置倒计时初始值为10秒
+            let seconds = 10;
+            if (countdownElement) {
+                countdownElement.textContent = seconds.toString();
+            }
+            console.log('开始10秒倒计时');
+            
+            // 创建倒计时函数
+            function updateCountdown() {
+                seconds--;
+                if (countdownElement) {
+                    countdownElement.textContent = seconds.toString();
+                }
+                console.log('倒计时更新:', seconds);
+                
+                if (seconds <= 0) {
+                    console.log('倒计时结束，跳转到登录页');
+                    goToLoginPage();
+                } else {
+                    // 继续倒计时
+                    timer = setTimeout(updateCountdown, 1000);
+                }
+            }
+            
+            // 立即启动倒计时
+            updateCountdown();
+            
+            // 安全保障：无论如何，11秒后强制跳转
+            setTimeout(function() {
+                console.log('安全保障：强制跳转到登录页');
+                goToLoginPage();
+            }, 11000);
+        }
+
+        // 添加跳过功能
+        function addSkipFunctionality() {
+            // 首先尝试使用quote-card作为点击区域
+            const quoteCard = document.querySelector('.quote-card');
+            if (quoteCard) {
+                quoteCard.addEventListener('click', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡
+                    console.log('用户点击跳过倒计时');
+                    // 清除所有可能的定时器
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = null;
+                    }
+                    goToLoginPage();
+                });
+            }
+            
+            // 同时为启动页添加点击跳过功能（作为后备）
+            const splashPage = document.getElementById('splashPage');
+            if (splashPage && !quoteCard) { // 只有在没有quoteCard时才添加，避免重复处理
+                splashPage.addEventListener('click', function() {
+                    console.log('用户点击启动页跳过倒计时');
+                    // 清除所有可能的定时器
+                    if (timer) {
+                        clearTimeout(timer);
+                        timer = null;
+                    }
+                    goToLoginPage();
+                });
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.onload = function() {
+            console.log('页面加载完成，开始初始化');
+            
+            // 初始化定时器变量
+            timer = null;
+            
+            // 显示启动页
+            console.log('显示启动页');
+            showPage('splashPage');
+            
+            // 启动倒计时
+            startSplashCountdown();
+            
+            // 添加跳过功能
+            addSkipFunctionality();
+        };
+
+        // 登录功能（简化版）
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            // 简单验证（实际项目中应该连接到服务器验证）
+            if (username === '13800138000' && password === '123456') {
+                currentUser = username;
+                document.getElementById('currentUser').textContent = username;
+                showPage('mainPage');
+            } else {
+                alert('用户名或密码错误');
+            }
+        }
+
+        // 注册功能（简化版）
+        function showRegister() {
+            showPage('registerPage');
+        }
+
+        function backToLogin() {
+            showPage('loginPage');
+        }
+
+        function register() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const confirmPassword = document.getElementById('regConfirmPassword').value.trim();
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+                alert('密码必须同时包含字母和数字');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('密码长度必须至少为6位');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+            
+            // 简单注册（实际项目中应该连接到服务器）
+            alert('注册成功！');
+            backToLogin();
+        }
+    </script>
+    
+    <!-- 错误处理 -->
+    <script>
+        // 检查 LeanCloud 是否初始化成功
+        window.addEventListener('load', function() {
+            // 延迟检查，确保初始化完成
+            setTimeout(function() {
+                if (typeof LEANCLOUD_CONFIG === 'undefined') {
+                    console.warn('LeanCloud 初始化失败，可能影响部分功能');
+                    // 显示友好的错误提示
+                    const currentUserElement = document.getElementById('currentUser');
+                    if (currentUserElement) {
+                        currentUserElement.textContent = '离线模式';
+                    }
+                }
+            }, 1000);
+        });
+        
+        // 全局错误处理
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+        });
+    </script>
+</body>
+</html>

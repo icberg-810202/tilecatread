@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages LeanCloud连接测试</title>
+    <script src="https://unpkg.com/leancloud-storage@4.13.0/dist/av-min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #52c41a;
+            font-weight: bold;
+        }
+        .error {
+            color: #ff4d4f;
+            font-weight: bold;
+        }
+        .warning {
+            color: #faad14;
+            font-weight: bold;
+        }
+        .info {
+            color: #1890ff;
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Pages LeanCloud连接测试</h1>
+        <div id="status">正在初始化...</div>
+        <div id="result"></div>
+        <div id="debug"></div>
+        
+        <h2>测试步骤</h2>
+        <ol>
+            <li>检查LeanCloud SDK是否正确加载</li>
+            <li>验证应用配置是否正确</li>
+            <li>测试数据库连接和对象保存</li>
+            <li>显示详细结果和调试信息</li>
+        </ol>
+    </div>
+
+    <script src="leancloud-config.js"></script>
+    <script>
+        // 页面加载完成后执行测试
+        window.addEventListener('load', function() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+            const debugDiv = document.getElementById('debug');
+            
+            // 显示当前页面信息
+            debugDiv.innerHTML = '<h3>页面信息:</h3>';
+            debugDiv.innerHTML += '<p>当前URL: ' + window.location.href + '</p>';
+            debugDiv.innerHTML += '<p>Origin: ' + window.location.origin + '</p>';
+            
+            // 检查LeanCloud SDK是否已加载
+            if (typeof AV === 'undefined') {
+                statusDiv.innerHTML = '<p class="error">❌ LeanCloud SDK未正确加载</p>';
+                resultDiv.innerHTML = '<p>请检查网络连接或刷新页面</p>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<p class="info">ℹ️ LeanCloud SDK已加载，版本: ' + AV.version + '</p>';
+            debugDiv.innerHTML += '<p>SDK版本: ' + AV.version + '</p>';
+            
+            // 检查LeanCloud是否已初始化
+            setTimeout(function() {
+                if (typeof LEANCLOUD_CONFIG !== 'undefined' && typeof LEANCLOUD_CONFIG.AV !== 'undefined') {
+                    statusDiv.innerHTML += '<br><p class="success">✅ LeanCloud已成功初始化</p>';
+                    debugDiv.innerHTML += '<p>Server URL: https://eenvurhh.api.lncldglobal.com</p>';
+                    
+                    // 测试数据库连接
+                    testDatabaseConnection();
+                } else {
+                    statusDiv.innerHTML += '<br><p class="error">❌ LeanCloud初始化失败</p>';
+                    resultDiv.innerHTML = '<p>请检查配置文件leancloud-config.js</p>';
+                }
+            }, 1000);
+        });
+        
+        // 测试数据库连接
+        function testDatabaseConnection() {
+            const resultDiv = document.getElementById('result');
+            const debugDiv = document.getElementById('debug');
+            
+            try {
+                // 创建一个测试对象
+                const TestObject = LEANCLOUD_CONFIG.AV.Object.extend('ConnectionTest');
+                const testObj = new TestObject();
+                testObj.set('testField', 'testValue');
+                testObj.set('timestamp', new Date().toISOString());
+                testObj.set('source', 'GitHub Pages Test');
+                
+                debugDiv.innerHTML += '<p>正在创建测试对象...</p>';
+                
+                // 保存测试对象
+                testObj.save().then(function(result) {
+                    resultDiv.innerHTML = '<p class="success">✅ LeanCloud数据库连接正常</p>';
+                    resultDiv.innerHTML += '<p class="success">✅ 测试对象保存成功</p>';
+                    resultDiv.innerHTML += '<div style="margin-top: 10px; padding: 10px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 4px;">';
+                    resultDiv.innerHTML += '<p><strong>对象信息:</strong></p>';
+                    resultDiv.innerHTML += '<p>对象ID: ' + result.id + '</p>';
+                    resultDiv.innerHTML += '<p>创建时间: ' + result.createdAt + '</p>';
+                    resultDiv.innerHTML += '</div>';
+                    
+                    debugDiv.innerHTML += '<p class="success">保存成功，对象ID: ' + result.id + '</p>';
+                    
+                    // 测试查询功能
+                    testQueryFunction(result.id);
+                }).catch(function(error) {
+                    resultDiv.innerHTML = '<p class="error">❌ 保存测试对象失败</p>';
+                    resultDiv.innerHTML += '<div style="margin-top: 10px; padding: 10px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 4px;">';
+                    resultDiv.innerHTML += '<p><strong>错误信息:</strong></p>';
+                    resultDiv.innerHTML += '<p>' + error.message + '</p>';
+                    resultDiv.innerHTML += '</div>';
+                    
+                    debugDiv.innerHTML += '<p class="error">错误详情: ' + JSON.stringify(error) + '</p>';
+                    
+                    // 提供解决方案建议
+                    if (error.message.includes('Origin is not allowed')) {
+                        resultDiv.innerHTML += '<div style="margin-top: 10px; padding: 10px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 4px;">';
+                        resultDiv.innerHTML += '<p class="warning"><strong>解决方案:</strong></p>';
+                        resultDiv.innerHTML += '<p>请在LeanCloud控制台的"安全中心" -> "Web安全域名"中添加当前域名:</p>';
+                        resultDiv.innerHTML += '<pre>' + window.location.origin + '</pre>';
+                        resultDiv.innerHTML += '</div>';
+                    }
+                });
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error">❌ 测试过程中发生错误</p>';
+                resultDiv.innerHTML += '<div style="margin-top: 10px; padding: 10px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 4px;">';
+                resultDiv.innerHTML += '<p><strong>错误信息:</strong></p>';
+                resultDiv.innerHTML += '<p>' + error.message + '</p>';
+                resultDiv.innerHTML += '</div>';
+                
+                debugDiv.innerHTML += '<p class="error">捕获错误: ' + JSON.stringify(error) + '</p>';
+            }
+        }
+        
+        // 测试查询功能
+        function testQueryFunction(objectId) {
+            const resultDiv = document.getElementById('result');
+            const debugDiv = document.getElementById('debug');
+            
+            try {
+                debugDiv.innerHTML += '<p>正在测试查询功能...</p>';
+                
+                // 查询刚才保存的对象
+                const query = new LEANCLOUD_CONFIG.AV.Query('ConnectionTest');
+                query.equalTo('objectId', objectId);
+                
+                query.find().then(function(results) {
+                    if (results.length > 0) {
+                        resultDiv.innerHTML += '<br><p class="success">✅ 查询功能测试成功</p>';
+                        resultDiv.innerHTML += '<p>查询到 ' + results.length + ' 个对象</p>';
+                        debugDiv.innerHTML += '<p class="success">查询成功</p>';
+                    } else {
+                        resultDiv.innerHTML += '<br><p class="warning">⚠️ 查询功能测试完成，但未找到对象</p>';
+                        debugDiv.innerHTML += '<p class="warning">查询完成，但结果为空</p>';
+                    }
+                }).catch(function(error) {
+                    resultDiv.innerHTML += '<br><p class="error">❌ 查询功能测试失败</p>';
+                    resultDiv.innerHTML += '<p>错误: ' + error.message + '</p>';
+                    debugDiv.innerHTML += '<p class="error">查询错误: ' + JSON.stringify(error) + '</p>';
+                });
+            } catch (error) {
+                resultDiv.innerHTML += '<br><p class="error">❌ 查询测试过程中发生错误</p>';
+                resultDiv.innerHTML += '<p>错误: ' + error.message + '</p>';
+                debugDiv.innerHTML += '<p class="error">查询捕获错误: ' + JSON.stringify(error) + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>
