@@ -1,0 +1,47 @@
+Bwhisper 应用最终部署步骤
+======================
+
+1. 安装必要软件
+   - 下载并安装Git: https://git-scm.com/downloads
+   - 下载并安装Node.js (可选，用于本地测试): https://nodejs.org/
+
+2. 清理GitHub仓库
+   - 访问 https://github.com/icberg-810202/tilecatread
+   - 删除不需要的文件，或者使用Git命令清空仓库
+
+3. 部署网站文件
+   - 方法一（推荐）: 使用我们提供的脚本
+     a. 双击运行 simple-deploy.bat
+     b. 脚本会自动完成所有Git操作
+     
+   - 方法二: 手动Git操作
+     a. 打开命令提示符
+     b. 执行以下命令:
+        cd /d "E:\我的应用\tilecatread-main"
+        git init
+        git add .
+        git commit -m "Upload website files"
+        git remote add origin https://github.com/icberg-810202/tilecatread.git
+        git push -u origin main --force
+
+4. 启用GitHub Pages
+   - 访问 https://github.com/icberg-810202/tilecatread/settings/pages
+   - 选择 "Deploy from a branch"
+   - 选择分支: main
+   - 选择文件夹: / (root)
+   - 点击 "Save"
+
+5. 验证部署结果
+   - 访问主页面: https://icberg-810202.github.io/tilecatread/
+   - 测试LeanCloud连接: https://icberg-810202.github.io/tilecatread/test-github-connection.html
+
+6. 故障排除
+   - 如果LeanCloud连接失败，请检查:
+     a. LeanCloud控制台中的Web安全域名配置
+     b. 确保已添加域名: https://icberg-810202.github.io/tilecatread/
+     c. 查看浏览器控制台错误信息
+     d. 参考 leancloud-troubleshooting.txt 文件
+
+7. 后续维护
+   - 每次更新网站文件后，重复步骤3即可
+   - 可以使用 simple-deploy.bat 快速部署

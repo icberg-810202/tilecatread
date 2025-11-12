@@ -1,0 +1,55 @@
+Bwhisper 应用上传到GitHub的详细步骤
+================================
+
+1. 下载并安装GitHub Desktop（如果尚未安装）
+   - 访问 https://desktop.github.com/
+   - 下载并安装GitHub Desktop
+
+2. 使用GitHub Desktop克隆仓库
+   - 打开GitHub Desktop
+   - 登录您的GitHub账户
+   - 点击"File" -> "Clone repository"
+   - 选择"URL"选项卡
+   - 在"Repository URL"中输入: https://github.com/icberg-810202/tilecatread
+   - 选择本地保存路径
+   - 点击"Clone"
+
+3. 将文件复制到仓库目录
+   - 打开文件资源管理器
+   - 导航到GitHub Desktop克隆的仓库目录
+   - 将[E:\我的应用\tilecatread-main](file:///E:/我的应用/tilecatread-main)目录中的所有文件复制到仓库目录中
+   - 替换任何已存在的文件
+
+4. 提交并推送更改
+   选项一：使用GitHub Desktop
+   - 回到GitHub Desktop
+   - 在左下角输入提交信息，例如"Upload website files"
+   - 点击"Commit to main"
+   - 点击"Push origin"按钮
+   
+   选项二：使用命令行脚本
+   - 双击运行 direct-git-deploy.bat
+   - 脚本会自动完成Git初始化、文件添加、提交和推送
+
+5. 启用GitHub Pages
+   - 访问 https://github.com/icberg-810202/tilecatread/settings/pages
+   - 在"Source"部分选择"Deploy from a branch"
+   - 选择分支"main"和路径"/ (root)"
+   - 点击"Save"
+
+6. 测试部署
+   - 等待几分钟让GitHub Pages完成部署
+   - 访问 https://icberg-810202.github.io/tilecatread/
+   - 确认网站正常运行
+
+7. 配置LeanCloud安全域名
+   - 登录LeanCloud控制台
+   - 进入您的应用
+   - 导航到"安全中心" -> "Web安全域名"
+   - 添加域名: https://icberg-810202.github.io
+   - 保存设置
+
+注意事项:
+- 如果遇到权限问题，请确保您使用正确的GitHub凭据
+- 首次部署后可能需要几分钟时间才能通过GitHub Pages访问
+- LeanCloud域名配置可能需要几分钟生效
