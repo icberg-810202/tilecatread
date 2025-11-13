@@ -3,9 +3,13 @@
 // ============================================
 // 注意：全局变量已在 script.js 中声明，此处不重复声明
 
+console.log('📝 script-leancloud.js 开始加载...');
+
 // LeanCloud 客户端实例
 let leancloud = null;
 let useLeanCloud = true;
+
+console.log('✅ script-leancloud.js 变量初始化完成');
 
 // ============================================
 // LeanCloud 数据库操作函数
@@ -326,4 +330,7 @@ if (typeof window !== 'undefined') {
     // ♥♥♥ 改进：待LeanCloud的initLeanCloud完成后，就会useLeanCloud设置为true
     // 客户端应用一上来就是默认按照useLeanCloud = true来启动（第7行）
     console.log('[script-leancloud.js] 当前 useLeanCloud =', useLeanCloud);
+    console.log('✅ script-leancloud.js 加载完成！');
+    console.log('✅ leancloudRegister 函数已定义:', typeof leancloudRegister === 'function');
+    console.log('✅ leancloudLogin 函数已定义:', typeof leancloudLogin === 'function');
 }

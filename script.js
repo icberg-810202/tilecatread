@@ -809,6 +809,11 @@ function register() {
 // 尝试LeanCloud注册
 async function attemptLeanCloudRegister(username, password) {
     try {
+        console.log('🔍 检查 leancloudRegister 函数...');
+        console.log('typeof leancloudRegister:', typeof leancloudRegister);
+        console.log('typeof AV:', typeof AV);
+        console.log('useLeanCloud:', typeof useLeanCloud !== 'undefined' ? useLeanCloud : 'undefined');
+        
         if (typeof leancloudRegister !== 'function') {
             throw new Error('LeanCloud注册函数未定义');
         }
