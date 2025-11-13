@@ -17,8 +17,6 @@ let registeredUsers = {};
 
 // 页面状态
 let currentBookIndex = null;
-let countdown = 10;
-let timer = null;
 
 // 验证码相关
 let verificationCodes = {}; // 存储验证码 {phone: {code, expireTime}}

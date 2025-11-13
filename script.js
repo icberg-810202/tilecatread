@@ -356,9 +356,63 @@ function login() {
         return;
     }
     
-    // 直接使用本地登录功能，不再依赖COZE API
-    console.log('使用本地登录功能');
-    localLogin(username, password);
+    // 优先尝试LeanCloud登录，失败时回退到本地登录
+    console.log('尝试LeanCloud登录');
+    attemptLeanCloudLogin(username, password);
+}
+
+// 尝试LeanCloud登录
+async function attemptLeanCloudLogin(username, password) {
+    try {
+        if (typeof leancloudLogin !== 'function') {
+            throw new Error('LeanCloud登录函数未定义');
+        }
+        
+        // 尝试使用LeanCloud登录
+        const loginResult = await leancloudLogin(username, password);
+        
+        console.log('✅ LeanCloud登录成功:', username);
+        
+        // 保存用户信息
+        currentUser = username;
+        currentUserUid = loginResult.id;
+        currentUserToken = loginResult.sessionToken;
+        
+        // 从LeanCloud加载用户数据
+        try {
+            const cloudUserData = await leancloudLoadUserData(loginResult.id);
+            if (cloudUserData) {
+                userDatabase[username] = cloudUserData;
+                // 同时保存到本地作为备份
+                saveUserLocalBackup(username, password, cloudUserData);
+            } else {
+                // 云端没有数据，尝试从本地加载
+                tryLoadUserDataFromLocal(username);
+            }
+        } catch (error) {
+            console.warn('从LeanCloud加载数据失败，尝试本地加载:', error);
+            tryLoadUserDataFromLocal(username);
+        }
+        
+        // 保存会话信息
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('userToken', currentUserToken);
+        
+        // 更新UI
+        document.getElementById('currentUser').textContent = username;
+        showPage('mainPage');
+        
+        // 渲染书籍列表
+        renderBooksGrid();
+        updateSelectionInfo();
+        
+        alert('登录成功！已连接到LeanCloud云服务。');
+    } catch (error) {
+        console.error('❌ LeanCloud登录失败:', error);
+        console.log('回退到本地登录...');
+        // 降级到本地登录
+        localLogin(username, password);
+    }
 }
 
 // 尝试COZE API登录，支持重试
@@ -763,9 +817,65 @@ function register() {
         return;
     }
     
-    // 直接使用本地注册功能，不再依赖COZE API
-    console.log('使用本地注册功能');
-    localRegister(username, password);
+    // 优先尝试LeanCloud注册，失败时回退到本地注册
+    console.log('尝试LeanCloud注册');
+    attemptLeanCloudRegister(username, password);
+}
+
+// 尝试LeanCloud注册
+async function attemptLeanCloudRegister(username, password) {
+    try {
+        if (typeof leancloudRegister !== 'function') {
+            throw new Error('LeanCloud注册函数未定义');
+        }
+        
+        // 尝试使用LeanCloud注册
+        const registerResult = await leancloudRegister(username, password);
+        
+        console.log('✅ LeanCloud注册成功:', username);
+        
+        // 为新用户创建默认数据
+        const newUserData = {
+            books: []
+        };
+        
+        // 保存到LeanCloud数据库
+        try {
+            // 调用脚本-leancloud.js中的函数保存数据
+            const Table = AV.Object.extend('Bwhisper_database');
+            const table = new Table();
+            table.set('username', username);
+            table.set('userId', registerResult.id);
+            table.set('books', newUserData.books);
+            await table.save();
+            
+            console.log('✅ 用户数据已需于LeanCloud云数据库');
+            
+            // 同时保存到本地作为备份
+            saveUserLocalBackup(username, password, newUserData);
+            
+            alert('注册成功！数据已同步到LeanCloud云数据库。');
+            backToLogin();
+        } catch (error) {
+            console.error('LeanCloud数据初始化失败，使用本地存储作为后备:', error);
+            // 失败时使用本地存储作为后备
+            saveUserLocalBackup(username, password, newUserData);
+            alert('注册成功，但无法同步云数据，数据已保存到本地。');
+            backToLogin();
+        }
+    } catch (error) {
+        console.error('❌ LeanCloud注册失败:', error);
+        console.log('回退到本地注册...');
+        
+        // 要求的错误处理
+        if (error.message && error.message.includes('用户名已')) {
+            alert('用户名已被注册，请选择其他用户名');
+            return;
+        }
+        
+        // 降级到本地注册
+        localRegister(username, password);
+    }
 }
 
 // 尝试COZE API注册，支持重试
