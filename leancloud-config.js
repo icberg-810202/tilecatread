@@ -20,8 +20,18 @@ function initLeanCloud() {
     // 检查AV是否已加载
     if (typeof AV === 'undefined') {
         console.error('❌ LeanCloud SDK未加载');
+        console.error('❌ 可能原因: unpkg.com CDN被阻止或网络问题');
+        console.error('💡 建议: 下载SDK到本地或使用国内CDN');
+        
+        // 设置useLeanCloud为false，降级到本地存储
+        if (typeof useLeanCloud !== 'undefined') {
+            useLeanCloud = false;
+            console.warn('⚠️ 已设置 useLeanCloud = false，将使用本地存储模式');
+        }
         return false;
     }
+    
+    console.log('✅ LeanCloud SDK已加载，AV对象存在');
     
     try {
         // 检查localStorage是否可用
@@ -43,6 +53,9 @@ function initLeanCloud() {
             disableCache: !storageAvailable
         });
         
+        console.log('✅ AV.init() 调用成功');
+        console.log('📡 ServerURL:', LEANCLOUD_APP_CONFIG.serverURL);
+        
         // ♥♥♥ 改进：一旦初始化成功，设置useLeanCloud为true
         if (typeof useLeanCloud !== 'undefined') {
             useLeanCloud = true;  // 清除该上次的false被设置
@@ -53,6 +66,13 @@ function initLeanCloud() {
         return true;
     } catch (error) {
         console.error('❌ LeanCloud初始化失败:', error.message);
+        console.error('❌ 错误详情:', error);
+        
+        // 设置useLeanCloud为false
+        if (typeof useLeanCloud !== 'undefined') {
+            useLeanCloud = false;
+            console.warn('⚠️ 初始化失败，已设置 useLeanCloud = false');
+        }
         return false;
     }
 }
@@ -62,22 +82,70 @@ if (document.readyState === 'loading') {
     // DOM还在加载中
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📖 DOMContentLoaded事件触发');
-        try {
-            initLeanCloud();
-            setupSplashPage();
-        } catch (error) {
-            console.error('💥 leancloud-config.js执行失败:', error);
+        
+        // 等待SDK加载完成，最多等待3秒
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        function tryInit() {
+            if (typeof AV !== 'undefined') {
+                console.log('✅ 检测到AV对象，开始初始化');
+                try {
+                    initLeanCloud();
+                    setupSplashPage();
+                } catch (error) {
+                    console.error('💥 leancloud-config.js执行失败:', error);
+                }
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.log(`⏳ 等待LeanCloud SDK加载... (第${retryCount}/${maxRetries}次)`);
+                setTimeout(tryInit, 300); // 300ms后重试
+            } else {
+                console.error('❌ 等待超时，LeanCloud SDK未能加载');
+                console.error('💡 应用将使用本地存储模式');
+                try {
+                    setupSplashPage(); // 仍然设置启动页
+                } catch (error) {
+                    console.error('💥 setupSplashPage失败:', error);
+                }
+            }
         }
+        
+        tryInit();
     });
 } else {
     // DOM已经加载完母
     console.log('📖 DOM已加载');
-    try {
-        initLeanCloud();
-        setupSplashPage();
-    } catch (error) {
-        console.error('💥 leancloud-config.js执行失败:', error);
+    
+    // 等待SDK加载
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    function tryInit() {
+        if (typeof AV !== 'undefined') {
+            console.log('✅ 检测到AV对象，开始初始化');
+            try {
+                initLeanCloud();
+                setupSplashPage();
+            } catch (error) {
+                console.error('💥 leancloud-config.js执行失败:', error);
+            }
+        } else if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`⏳ 等待LeanCloud SDK加载... (第${retryCount}/${maxRetries}次)`);
+            setTimeout(tryInit, 300);
+        } else {
+            console.error('❌ 等待超时，LeanCloud SDK未能加载');
+            console.error('💡 应用将使用本地存储模式');
+            try {
+                setupSplashPage();
+            } catch (error) {
+                console.error('💥 setupSplashPage失败:', error);
+            }
+        }
     }
+    
+    tryInit();
 }
 
 // 设置启动页
