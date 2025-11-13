@@ -1762,48 +1762,46 @@ function goToLoginPage() {
 
 // 最简化的倒计时函数（保留作为后备）
 function startCountdown() {
-    console.log('开始简化倒计时 - 当前时间:', new Date().toLocaleTimeString());
+    console.log('开始倒计时 - 当前时间:', new Date().toLocaleTimeString());
     
     // 获取倒计时元素
     const countdownElement = document.getElementById('countdown');
     console.log('倒计时元素:', countdownElement ? '存在' : '不存在');
     
-    // 设置初始值
-    if (countdownElement) {
-        countdownElement.textContent = '10';
-        console.log('已设置初始值为 10');
-    } else {
+    if (!countdownElement) {
         console.error('无法找到倒计时元素 #countdown');
-        return; // 如果找不到元素就返回
+        return;
     }
     
     // 重置倒计时变量
     countdown = 10;
+    countdownElement.textContent = '10';
+    console.log('已设置初始值为 10');
     
-    // 使用setTimeout链式调用，避免setInterval可能的问题
-    function updateCountdown() {
+    // 使用setInterval实现倒计时
+    let intervalId = setInterval(function() {
         countdown--;
-        if (countdownElement) {
-            countdownElement.textContent = countdown.toString();
-        }
+        countdownElement.textContent = countdown.toString();
         console.log('倒计时:', countdown);
         
         if (countdown <= 0) {
-            // 倒计时结束，跳转到登录页
+            // 倒计时结束，清除定时器
+            clearInterval(intervalId);
             console.log('倒计时结束，跳转到登录页');
             goToLoginPage();
-        } else {
-            // 继续倒计时
-            timer = setTimeout(updateCountdown, 1000);
         }
-    }
+    }, 1000);
     
-    // 启动倒计时
-    timer = setTimeout(updateCountdown, 1000);
-    console.log('倒计时已启动');
+    // 保存intervalId以便需要时可以清除
+    window.countdownInterval = intervalId;
+    console.log('倒计时已启动，间隔ID:', intervalId);
     
     // 绝对保障：无论如何，11秒后强制跳转
-    setTimeout(goToLoginPage, 11000);
+    setTimeout(function() {
+        console.log('安全保障：11秒已过，强制跳转到登录页');
+        clearInterval(intervalId);
+        goToLoginPage();
+    }, 11000);
 }
 
 // 初始化 - 修复关键问题
