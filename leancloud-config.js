@@ -56,14 +56,22 @@ if (document.readyState === 'loading') {
     // DOM还在加载中
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📖 DOMContentLoaded事件触发');
-        initLeanCloud();
-        setupSplashPage();
+        try {
+            initLeanCloud();
+            setupSplashPage();
+        } catch (error) {
+            console.error('💥 leancloud-config.js执行失败:', error);
+        }
     });
 } else {
-    // DOM已经加载完毕
+    // DOM已经加载完母
     console.log('📖 DOM已加载');
-    initLeanCloud();
-    setupSplashPage();
+    try {
+        initLeanCloud();
+        setupSplashPage();
+    } catch (error) {
+        console.error('💥 leancloud-config.js执行失败:', error);
+    }
 }
 
 // 设置启动页
