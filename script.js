@@ -370,7 +370,14 @@ function login() {
 async function attemptLeanCloudLogin(username, password) {
     try {
         if (typeof leancloudLogin !== 'function') {
+            console.warn('leancloudLogin函数未定义，检查LeanCloud脚本是否已加载');
             throw new Error('LeanCloud登录函数未定义');
+        }
+        
+        // 检查LeanCloud是否可用
+        if (typeof AV === 'undefined') {
+            console.warn('AV对象未定义，LeanCloud SDK可能未正确加载');
+            throw new Error('LeanCloud SDK未加载');
         }
         
         // 尝试使用LeanCloud登录
@@ -795,7 +802,7 @@ function backToLogin() {
     showPage('loginPage');
 }
 
-// 用户注册 - 优先使用COZE API，失败时降级到本地存储
+// 用户注册 - 优先使用LeanCloud注册，失败时降级到本地存储
 function register() {
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value.trim();
@@ -803,6 +810,12 @@ function register() {
     
     if (!username || !password) {
         alert('请输入用户名和密码');
+        return;
+    }
+    
+    // 手机号格式验证 (11位数字)
+    if (!/^\d{11}$/.test(username)) {
+        alert('请输入有效的11位手机号');
         return;
     }
     
@@ -822,8 +835,14 @@ function register() {
         return;
     }
     
+    // 先检查本地是否已存在该用户
+    if (registeredUsers && registeredUsers[username]) {
+        alert('该手机号已被注册，请直接登录');
+        return;
+    }
+    
     // 优先尝试LeanCloud注册，失败时回退到本地注册
-    console.log('尝试LeanCloud注册');
+    console.log('尝试LeanCloud注册，用户名:', username);
     attemptLeanCloudRegister(username, password);
 }
 
@@ -846,15 +865,24 @@ async function attemptLeanCloudRegister(username, password) {
         
         // 保存到LeanCloud数据库
         try {
-            // 调用脚本-leancloud.js中的函数保存数据
-            const Table = AV.Object.extend('Bwhisper_database');
-            const table = new Table();
-            table.set('username', username);
-            table.set('userId', registerResult.id);
-            table.set('books', newUserData.books);
-            await table.save();
+            // 使用脚本-leancloud.js中的函数保存书籍数据
+            const Book = AV.Object.extend('Book');
+            const bookObj = new Book();
+            bookObj.set('name', '我的第一本书');
+            bookObj.set('author', '匿名');
+            bookObj.set('selected', false);
+            bookObj.set('userId', registerResult.id);
+            await bookObj.save();
             
-            console.log('✅ 用户数据已需于LeanCloud云数据库');
+            // 保存用户配置文件
+            const UserConfig = AV.Object.extend('UserConfig');
+            const configObj = new UserConfig();
+            configObj.set('username', username);
+            configObj.set('userId', registerResult.id);
+            configObj.set('totalBooks', 0);
+            await configObj.save();
+            
+            console.log('✅ 用户数据已保存到LeanCloud云数据库');
             
             // 同时保存到本地作为备份
             saveUserLocalBackup(username, password, newUserData);
@@ -876,6 +904,11 @@ async function attemptLeanCloudRegister(username, password) {
         if (error.message && error.message.includes('用户名已')) {
             alert('用户名已被注册，请选择其他用户名');
             return;
+        }
+        
+        // 检查是否是LeanCloud不可用的错误
+        if (error.message && error.message.includes('LeanCloud 不可用')) {
+            console.log('LeanCloud不可用，将使用本地注册');
         }
         
         // 降级到本地注册
@@ -1003,10 +1036,17 @@ function attemptCozeRegister(username, password, maxRetries, currentAttempt = 0)
 // 本地注册实现
 function localRegister(username, password) {
     try {
+        console.log('开始本地注册，用户名:', username);
+        
         // 检查用户名在本地是否已存在
         if (registeredUsers && registeredUsers[username]) {
             alert('用户名已存在，请选择其他用户名');
             return;
+        }
+        
+        // 确保注册用户对象已初始化
+        if (!registeredUsers) {
+            registeredUsers = {};
         }
         
         // 为新用户创建默认数据
@@ -1017,8 +1057,22 @@ function localRegister(username, password) {
         // 保存到本地存储
         saveUserLocalBackup(username, password, newUserData);
         
+        // 同时更新内存中的用户数据库
+        if (!userDatabase) {
+            userDatabase = {};
+        }
+        userDatabase[username] = newUserData;
+        
+        console.log('本地注册成功，用户数据已保存');
+        
         // 提供更友好的提示，解释本地注册的原因
         alert('注册成功！由于网络原因，您的账号将使用本地存储模式。提示：应用当前工作在离线模式，数据仅保存在本地设备上。');
+        
+        // 清除注册表单
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('regConfirmPassword').value = '';
+        
         backToLogin();
     } catch (error) {
         console.error('本地注册过程出错:', error);
@@ -1029,11 +1083,27 @@ function localRegister(username, password) {
 // 将用户信息备份到本地存储
 function saveUserLocalBackup(username, password, userData) {
     try {
+        console.log('开始保存用户本地备份:', username);
+        
         // 初始化存储对象
         if (!userDatabase) {
             userDatabase = {};
         }
         if (!registeredUsers) {
+            registeredUsers = {};
+        }
+        
+        // 从localStorage加载现有数据
+        try {
+            const savedRegisteredUsers = localStorage.getItem('registeredUsers');
+            if (savedRegisteredUsers) {
+                const parsed = JSON.parse(savedRegisteredUsers);
+                if (parsed && typeof parsed === 'object') {
+                    registeredUsers = { ...registeredUsers, ...parsed };
+                }
+            }
+        } catch (e) {
+            console.warn('加载现有注册用户数据失败，将使用空对象:', e);
             registeredUsers = {};
         }
         
@@ -1045,9 +1115,10 @@ function saveUserLocalBackup(username, password, userData) {
         localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('userDatabase_' + username, JSON.stringify(userData));
         
-        console.log('用户信息已备份到本地存储');
+        console.log('用户信息已备份到本地存储，当前注册用户数:', Object.keys(registeredUsers).length);
     } catch (e) {
         console.error('保存用户本地备份失败:', e);
+        throw e; // 抛出错误以便上层处理
     }
 }
 
