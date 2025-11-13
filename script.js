@@ -126,6 +126,11 @@ if (localStorage.getItem('registeredUsers')) {
     }
 }
 
+// 验证码和倒计时相关变量
+let verificationCodes = {};
+let sendCodeTimer = null;
+let sendCodeCountdown = 0;
+
 // 数据同步策略：
 // 1. 尝试使用COZE API进行操作
 // 2. COZE API失败时，使用本地存储作为后备
@@ -1985,8 +1990,6 @@ function displayResetPasswordStrength(password) {
 // ============================================
 // 忘记密码相关函数
 // ============================================
-
-let sendCodeCountdown = 0;
 
 function showForgotPassword() {
     showPage('forgotPasswordStep1');
