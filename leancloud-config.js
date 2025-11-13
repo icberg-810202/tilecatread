@@ -132,8 +132,29 @@ async function displayRandomQuote() {
 
 // 页面加载完成后显示随机语录
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOMContentLoaded 事件已触发 ===');
+    
     // 显示随机语录
+    console.log('准备显示随机语录...');
     displayRandomQuote();
+    console.log('随机语录已显示');
+    
+    // 检查语录内容是否被正确填充
+    const quoteContent = document.getElementById('splashQuoteContent');
+    const quoteSource = document.getElementById('splashQuoteSource');
+    console.log('splashQuoteContent 当前文本:', quoteContent?.textContent || '空');
+    console.log('splashQuoteSource 当前文本:', quoteSource?.textContent || '空');
+    
+    // 如果语录为空，设置默认语录
+    if (!quoteContent?.textContent || quoteContent.textContent.trim() === '') {
+        console.log('没有语录内容，设置默认语录');
+        if (quoteContent) {
+            quoteContent.textContent = '阅读是一座随身携带的避难所。';
+        }
+        if (quoteSource) {
+            quoteSource.textContent = '——  毛姆';
+        }
+    }
     
     // 如果用户点击启动页，可以立即跳过
     const splashPage = document.getElementById('splashPage');
@@ -142,10 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // 跳转到登录页的功能由script.js处理
         });
     }
-    
-    // 确保window.onload中的初始化能够正确执行
-    // 特别是倒计时功能
-    console.log('DOMContentLoaded 事件已触发，等待 window.onload 初始化倒计时...');
     
     // 直接启动倒计时（作为备用）
     // 检查用户是否已登录
