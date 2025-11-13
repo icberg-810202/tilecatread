@@ -1588,9 +1588,6 @@ function saveUserDatabase() {
     // });
 }
 
-// 全局变量，用于倒计时控制
-let timer = null;
-
 // 跳转到登录页的全局函数
 function goToLoginPage() {
     const splashPage = document.getElementById('splashPage');

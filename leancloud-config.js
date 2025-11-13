@@ -123,9 +123,27 @@ function startCountdown() {
         if (count <= 0) {
             clearInterval(interval);
             console.log('✅ 倒计时结束，跳转到登录页');
-            if (typeof goToLoginPage === 'function') {
-                goToLoginPage();
-            }
+            
+            // 延迟100ms，确保所有脚本都已加载
+            setTimeout(function() {
+                if (typeof goToLoginPage === 'function') {
+                    console.log('✅ 调用goToLoginPage()函数');
+                    goToLoginPage();
+                } else {
+                    console.warn('⚠️ goToLoginPage函数未定义，使用备份方案');
+                    // 备份方案：直接操作DOM
+                    const splashPage = document.getElementById('splashPage');
+                    const loginPage = document.getElementById('loginPage');
+                    if (splashPage) {
+                        splashPage.classList.add('hidden');
+                        console.log('✅ 隐藏启动页');
+                    }
+                    if (loginPage) {
+                        loginPage.classList.remove('hidden');
+                        console.log('✅ 显示登录页');
+                    }
+                }
+            }, 100);
         }
     }, 1000);
 }
