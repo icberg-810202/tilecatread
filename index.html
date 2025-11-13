@@ -297,5 +297,29 @@
     <script defer src="script.js"></script>
     <script defer src="script-leancloud.js"></script>
     <script defer src="leancloud-config.js"></script>
+    
+    <!-- 脚本加载完成后的验证 -->
+    <script>
+        // 确保所有脚本加载完成
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('=== DOM加载完成，验证函数定义 ===');
+            
+            // 验证关键函数
+            const criticalFunctions = ['showRegister', 'showPage', 'login', 'register', 'backToLogin'];
+            let allDefined = true;
+            
+            criticalFunctions.forEach(func => {
+                const isDefined = typeof window[func] === 'function';
+                console.log(`${isDefined ? '✅' : '❌'} ${func}: ${isDefined ? '已定义' : '未定义'}`);
+                if (!isDefined) allDefined = false;
+            });
+            
+            if (allDefined) {
+                console.log('✅ 所有关键函数都已定义！');
+            } else {
+                console.error('❌ 某些函数未定义，可能存在脚本加载问题！');
+            }
+        });
+    </script>
 </body>
 </html>
