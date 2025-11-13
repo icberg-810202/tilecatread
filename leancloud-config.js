@@ -142,4 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // 跳转到登录页的功能由script.js处理
         });
     }
+    
+    // 确保window.onload中的初始化能够正确执行
+    // 特别是倒计时功能
+    console.log('DOMContentLoaded 事件已触发，等待 window.onload 初始化倒计时...');
 });

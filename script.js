@@ -1762,14 +1762,19 @@ function goToLoginPage() {
 
 // 最简化的倒计时函数（保留作为后备）
 function startCountdown() {
-    console.log('开始简化倒计时');
+    console.log('开始简化倒计时 - 当前时间:', new Date().toLocaleTimeString());
     
     // 获取倒计时元素
     const countdownElement = document.getElementById('countdown');
+    console.log('倒计时元素:', countdownElement ? '存在' : '不存在');
     
     // 设置初始值
     if (countdownElement) {
         countdownElement.textContent = '10';
+        console.log('已设置初始值为 10');
+    } else {
+        console.error('无法找到倒计时元素 #countdown');
+        return; // 如果找不到元素就返回
     }
     
     // 重置倒计时变量
@@ -1795,6 +1800,7 @@ function startCountdown() {
     
     // 启动倒计时
     timer = setTimeout(updateCountdown, 1000);
+    console.log('倒计时已启动');
     
     // 绝对保障：无论如何，11秒后强制跳转
     setTimeout(goToLoginPage, 11000);
@@ -1802,7 +1808,9 @@ function startCountdown() {
 
 // 初始化 - 修复关键问题
 window.onload = function() {
+    console.log('=== window.onload 已调用 ===');
     console.log('页面加载完成，开始初始化');
+    console.log('当前时间:', new Date().toLocaleTimeString());
     
     // 重置倒计时变量
     countdown = 10;
@@ -1926,7 +1934,7 @@ window.onload = function() {
     
     if (!savedUsername) {
         // 用户未登录
-        console.log('用户未登录');
+        console.log('=== 用户未登录，准备显示启动页 ===');
         
         // 显示启动页
         console.log('显示启动页');
@@ -1982,10 +1990,13 @@ window.onload = function() {
         }
         
         // 立即加载语录
+        console.log('准备加载语录...');
         loadRandomQuote();
         
         // 启动倒计时功能
+        console.log('准备启动倒计时功能...');
         startCountdown();
+        console.log('倒计时启动完毕');
     }
     
     // 添加跳过功能
