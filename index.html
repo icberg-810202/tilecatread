@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bwhisper</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- LeanCloud SDK - CDN版本 -->
-    <script src="https://unpkg.com/leancloud-storage@4.13.0/dist/av-min.js"></script>
     
     <style>
         /* 密码强度指示器样式 */
@@ -39,30 +35,9 @@
             color: #666;
             margin-bottom: 10px;
         }
-        /* 调试链接样式 */
-        .debug-links {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-        }
-        .debug-links a {
-            display: inline-block;
-            margin-left: 10px;
-            padding: 5px 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .debug-links a:hover {
-            background: rgba(0,0,0,0.9);
-        }
     </style>
 </head>
 <body>
-    <!-- 调试链接已删除 -->
     <!-- 启动页 -->
     <div id="splashPage" class="page">
         <div class="quote-card">
@@ -314,62 +289,7 @@
         </div>
     </div>
 
-    <!-- 应用脚本 -->
-    <script src="leancloud-config.js"></script>
-    <script src="playback-controller.js"></script>
+    <!-- 应用脚本 - 仅引用script.js -->
     <script src="script.js"></script>
-    <script src="script-leancloud.js"></script>
-    
-    <!-- 确保倒计时启动 -->
-    <script>
-        // 立即检查是否需要启动倒计时
-        (function() {
-            console.log('=== 脚本加载完成，检查倒计时 ===');
-            
-            // 检查用户是否登录
-            const savedUsername = sessionStorage.getItem('username');
-            console.log('当前用户:', savedUsername || '未登录');
-            
-            if (!savedUsername) {
-                console.log('用户未登录，准备启动倒计时');
-                
-                // 确保DOM已准备
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        console.log('DOM已准备，执行倒计时');
-                        if (typeof startCountdown === 'function') {
-                            startCountdown();
-                        }
-                    });
-                } else {
-                    // DOM已准备
-                    console.log('DOM已准备，立即执行倒计时');
-                    if (typeof startCountdown === 'function') {
-                        startCountdown();
-                    } else {
-                        console.error('startCountdown 函数未定义');
-                    }
-                }
-            }
-        })();
-    </script>
-    
-    <!-- 错误处理 -->
-    <script>
-        // 检查 LeanCloud 是否初始化成功
-        window.addEventListener('load', function() {
-            // 延迟检查，确保初始化完成
-            setTimeout(function() {
-                if (typeof LEANCLOUD_CONFIG === 'undefined') {
-                    console.warn('LeanCloud 初始化失败，可能影响部分功能');
-                    // 显示友好的错误提示
-                    const currentUserElement = document.getElementById('currentUser');
-                    if (currentUserElement) {
-                        currentUserElement.textContent = '离线模式';
-                    }
-                }
-            }, 1000);
-        });
-    </script>
 </body>
 </html>

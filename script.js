@@ -1760,6 +1760,70 @@ function goToLoginPage() {
     }
 }
 
+// 显示随机语录函数
+function displayRandomQuote() {
+    console.log('📖 displayRandomQuote 函数被调用');
+    
+    try {
+        // 使用默认语录
+        const defaultQuotes = [
+            {
+                content: "阅读是一座随身携带的避难所。",
+                source: "毛姆"
+            },
+            {
+                content: "书中自有黄金屋，书中自有颜如玉。",
+                source: "《增广贤文》"
+            },
+            {
+                content: "读书破万卷，下笔如有神。",
+                source: "杜甫"
+            },
+            {
+                content: "书籍是人类进步的阶梯。",
+                source: "高尔基"
+            }
+        ];
+        
+        const randomQuote = defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
+        console.log('📖 选中的语录:', randomQuote.content);
+        
+        const quoteContent = document.getElementById('splashQuoteContent');
+        const quoteSource = document.getElementById('splashQuoteSource');
+        
+        console.log('📖 quoteContent 元素:', quoteContent ? '找到' : '未找到');
+        console.log('📖 quoteSource 元素:', quoteSource ? '找到' : '未找到');
+        
+        if (quoteContent) {
+            quoteContent.textContent = randomQuote.content;
+            console.log('✅ 已设置语录内容:', randomQuote.content);
+        } else {
+            console.error('❌ 找不到 splashQuoteContent 元素');
+        }
+        
+        if (quoteSource) {
+            quoteSource.textContent = `—— ${randomQuote.source}`;
+            console.log('✅ 已设置语录来源:', `—— ${randomQuote.source}`);
+        } else {
+            console.error('❌ 找不到 splashQuoteSource 元素');
+        }
+    } catch (error) {
+        console.error('❌ displayRandomQuote 执行失败:', error);
+        // 出错时使用默认语录
+        const quoteContent = document.getElementById('splashQuoteContent');
+        const quoteSource = document.getElementById('splashQuoteSource');
+        
+        if (quoteContent) {
+            quoteContent.textContent = "阅读是一座随身携带的避难所。";
+            console.log('✅ 已设置默认语录内容');
+        }
+        if (quoteSource) {
+            quoteSource.textContent = "—— 毛姆";
+            console.log('✅ 已设置默认语录来源');
+        }
+    }
+}
+
 // 最简化的倒计时函数（保留作为后备）
 function startCountdown() {
     console.log('===== 开始倒计时 =====');
@@ -1990,9 +2054,18 @@ window.onload = function() {
             }
         }
         
-        // 立即加载语录
-        console.log('准备加载语录...');
-        loadRandomQuote();
+        // 优先调用 displayRandomQuote，作为主要方案
+        console.log('准备显示语录...');
+        displayRandomQuote();
+        console.log('语录已显示');
+        
+        // 如果 displayRandomQuote 没有设置内容，开始调用 loadRandomQuote 作为后备
+        setTimeout(function() {
+            if (!quoteContent.textContent || quoteContent.textContent.trim() === '') {
+                console.log('语录内容为空，调用 loadRandomQuote...');
+                loadRandomQuote();
+            }
+        }, 100);
         
         // 启动倒计时功能
         console.log('准备启动倒计时功能...');
