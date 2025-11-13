@@ -24,22 +24,39 @@ function initLeanCloud() {
   };
 
   try {
+    // 检查是否启用了跟踪防护（某些浏览器会阻止第三方存储访问）
+    let storageAvailable = true;
+    try {
+      const testKey = '__leancloud_test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+    } catch (e) {
+      console.warn('⚠️ 浏览器跟踪防护限制了存储访问，将使用内存存储');
+      storageAvailable = false;
+    }
+    
     // 初始化 LeanCloud
     AV.init({
       appId: LEANCLOUD_CONFIG.appId,
       appKey: LEANCLOUD_CONFIG.appKey,
       serverURL: LEANCLOUD_CONFIG.serverURL,
       // 为本地开发环境启用跨域支持
-      production: !isLocalDevelopment()
+      production: !isLocalDevelopment(),
+      // 禁用缓存以避免跟踪防护问题
+      disableCache: !storageAvailable
     });
     
     // 导出供其他文件使用
     window.LEANCLOUD_CONFIG = {
-      AV: AV
+      AV: AV,
+      storageAvailable: storageAvailable
     };
     
     console.log('✅ LeanCloud 初始化成功');
     console.log('开发环境:', isLocalDevelopment() ? '本地开发' : '生产环境');
+    if (!storageAvailable) {
+      console.warn('⚠️ 存储限制已启用，将仅使用内存存储');
+    }
     
     // 添加详细的CORS错误处理
     AV.on('error', function(error) {
@@ -47,8 +64,7 @@ function initLeanCloud() {
       if (error.code === 'CORS') {
         console.error('CORS错误: 请检查LeanCloud安全域名配置是否正确');
         console.error('应在LeanCloud控制台添加以下安全域名:');
-        console.error('- http://localhost:8000');
-        console.error('- http://127.0.0.1:8000');
+        console.error('- https://icberg-810202.github.io');
       }
     });
     
