@@ -2,9 +2,6 @@
 
 一个优雅的个人阅读语录收藏和管理应用，支持本地存储和云端同步两种模式。
 
-> **重要更新**：为了优化中国大陆用户的访问体验，我们已迁移到 LeanCloud，
-> 提供更快的访问速度和永久免费且不会因不活跃而暂停的服务。
-
 ---
 
 ## ✨ 主要特性
@@ -34,43 +31,37 @@
 
 ✅ 开箱即用，无需任何配置！
 
-### 方式二：LeanCloud 云端版本（推荐，特别适合中国大陆用户）
+### 方式二：Supabase 云端版本（推荐）
 
 1. 下载项目文件
-2. 按照 [LEANCLOUD_MIGRATION_COMPLETE.md](./LEANCLOUD_MIGRATION_COMPLETE.md) 完成 LeanCloud 配置
-3. 按照 [部署指南](./deployment-guide.txt) 部署到 GitHub Pages
-4. 享受云端同步功能！
+2. 按照 [QUICKSTART.md](./QUICKSTART.md) 完成 5 分钟配置
+3. 享受云端同步功能！
 
-✅ 支持多设备同步，数据永不丢失，项目永不暂停，中国大陆访问速度快！
+✅ 支持多设备同步，数据永不丢失！
 
 ---
 
 ## 📖 文档
 
-- **[LeanCloud 迁移完成报告](./LEANCLOUD_MIGRATION_COMPLETE.md)** - LeanCloud 配置与迁移指南
-- **[快速开始指南](./QUICKSTART.md)** - 5分钟配置 Supabase 云端同步（已弃用）
+- **[快速开始指南](./QUICKSTART.md)** - 5分钟配置 Supabase 云端同步
 - **[手机号验证功能说明](./PHONE_VERIFICATION_GUIDE.md)** - 手机号登录与密码重置指南
 - **[DeepSeek 风格设计文档](./DESIGN_UPDATE.md)** - 现代化 UI 设计说明（新增！）
-- **[详细配置说明](./SUPABASE_SETUP.md)** - Supabase 完整配置教程（已弃用）
+- **[详细配置说明](./SUPABASE_SETUP.md)** - Supabase 完整配置教程
 - **[版本切换指南](./VERSION_SWITCH.md)** - 如何在本地和云端版本间切换
-- **[数据库初始化脚本](./supabase-init.sql)** - SQL 初始化脚本（Supabase 版本）
-- **[部署指南](./deployment-guide.txt)** - 完整部署指南
-- **[手动部署说明](./manual-deployment-guide.txt)** - 手动部署详细步骤
+- **[数据库初始化脚本](./supabase-init.sql)** - SQL 初始化脚本
 
 ---
 
 ## 🎯 功能对比
 
-| 功能 | 本地版本 | LeanCloud版本 |
+| 功能 | 本地版本 | Supabase版本 |
 |------|---------|-------------|
-| 💾 数据存储 | localStorage | ☁️ LeanCloud + localStorage |
+| 💾 数据存储 | localStorage | ☁️ Supabase + localStorage |
 | 🔄 多设备同步 | ❌ | ✅ |
 | 📴 离线使用 | ✅ | ✅ |
 | 🔒 数据安全 | 清除浏览器会丢失 | ✅ 云端持久化 |
-| ⚙️ 配置难度 | 无需配置 | 简单配置 |
+| ⚙️ 配置难度 | 无需配置 | 5分钟配置 |
 | 🌐 网络依赖 | 不需要 | 首次同步需要 |
-| 🚫 项目暂停 | 不适用 | 永不暂停 |
-| 🚀 国内访问速度 | 本地 | 极快 |
 
 ---
 
@@ -78,7 +69,7 @@
 
 - **前端**: 纯 HTML + CSS + JavaScript
 - **本地存储**: localStorage
-- **云端数据库**: LeanCloud (国内访问极快)
+- **云端数据库**: Supabase (PostgreSQL)
 - **图标**: Emoji
 - **样式**: 原生 CSS
 
@@ -177,13 +168,11 @@
 - 📴 经常离线使用
 - ⚡ 追求极致性能
 
-### 选择 LeanCloud 版本如果你：
+### 选择 Supabase 版本如果你：
 - 📱 在多台设备使用
 - ☁️ 需要数据云端备份
 - 🔄 需要数据同步
 - 👥 未来可能需要分享功能
-- 🚫 不希望项目因不活跃而暂停
-- 🇨🇳 在中国大陆使用，希望更快的访问速度
 
 ---
 
