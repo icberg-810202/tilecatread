@@ -320,6 +320,40 @@
     <script src="script.js"></script>
     <script src="script-leancloud.js"></script>
     
+    <!-- 确保倒计时启动 -->
+    <script>
+        // 立即检查是否需要启动倒计时
+        (function() {
+            console.log('=== 脚本加载完成，检查倒计时 ===');
+            
+            // 检查用户是否登录
+            const savedUsername = sessionStorage.getItem('username');
+            console.log('当前用户:', savedUsername || '未登录');
+            
+            if (!savedUsername) {
+                console.log('用户未登录，准备启动倒计时');
+                
+                // 确保DOM已准备
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        console.log('DOM已准备，执行倒计时');
+                        if (typeof startCountdown === 'function') {
+                            startCountdown();
+                        }
+                    });
+                } else {
+                    // DOM已准备
+                    console.log('DOM已准备，立即执行倒计时');
+                    if (typeof startCountdown === 'function') {
+                        startCountdown();
+                    } else {
+                        console.error('startCountdown 函数未定义');
+                    }
+                }
+            }
+        })();
+    </script>
+    
     <!-- 错误处理 -->
     <script>
         // 检查 LeanCloud 是否初始化成功
