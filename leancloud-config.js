@@ -146,4 +146,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // 确保window.onload中的初始化能够正确执行
     // 特别是倒计时功能
     console.log('DOMContentLoaded 事件已触发，等待 window.onload 初始化倒计时...');
+    
+    // 直接启动倒计时（作为备用）
+    // 检查用户是否已登录
+    const savedUsername = sessionStorage.getItem('username');
+    if (!savedUsername) {
+        console.log('用户未登录，准备启动倒计时...');
+        // 延迟启动倒计时，确保所有脚本都已加载
+        setTimeout(function() {
+            if (typeof startCountdown === 'function') {
+                console.log('执行 startCountdown 函数');
+                startCountdown();
+            } else {
+                console.warn('startCountdown 函数未定义，可能还未加载');
+            }
+        }, 500);
+    }
 });
