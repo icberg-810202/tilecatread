@@ -1577,15 +1577,15 @@ function saveUserDatabase() {
     //         console.error('保存到COZE云数据库失败，仅保存到本地:', error);
     //     })
     //     .finally(() => {
-            // 2. 无论云端保存是否成功，都保存到本地存储作为备份
-            try {
-                localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
-                console.log('用户数据已保存到本地存储');
-            } catch (error) {
-                console.error('用户数据保存失败:', error);
-                alert('保存数据失败，请稍后重试');
-            }
-        });
+    // 2. 无论云端保存是否成功，都保存到本地存储作为备份
+    try {
+        localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
+        console.log('用户数据已保存到本地存储');
+    } catch (error) {
+        console.error('用户数据保存失败:', error);
+        alert('保存数据失败，请稍后重试');
+    }
+    // });
 }
 
 // 全局变量，用于倒计时控制
@@ -1706,7 +1706,6 @@ window.onload = function() {
                 // 渲染书籍列表
                 renderBooksGrid();
                 updateSelectionInfo();
-            }
             }
         } catch (e) {
             console.error('初始化用户数据失败:', e);

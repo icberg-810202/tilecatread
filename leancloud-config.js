@@ -58,16 +58,6 @@ function initLeanCloud() {
       console.warn('⚠️ 存储限制已启用，将仅使用内存存储');
     }
     
-    // 添加详细的CORS错误处理
-    AV.on('error', function(error) {
-      console.error('LeanCloud SDK 错误:', error);
-      if (error.code === 'CORS') {
-        console.error('CORS错误: 请检查LeanCloud安全域名配置是否正确');
-        console.error('应在LeanCloud控制台添加以下安全域名:');
-        console.error('- https://icberg-810202.github.io');
-      }
-    });
-    
     return true;
   } catch (error) {
     console.error('❌ LeanCloud 初始化失败:', error);
