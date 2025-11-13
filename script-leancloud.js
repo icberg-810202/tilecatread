@@ -6,23 +6,6 @@
 let leancloud = null;
 let useLeanCloud = true;
 
-// 当前用户信息
-let currentUser = null;
-let currentUserUid = null;
-let currentUserToken = null;
-
-// 本地数据缓存
-let userDatabase = {};
-let registeredUsers = {};
-
-// 页面状态
-let currentBookIndex = null;
-
-// 验证码相关
-let verificationCodes = {}; // 存储验证码 {phone: {code, expireTime}}
-let sendCodeTimer = null;
-let sendCodeCountdown = 0;
-
 // 作者数据库（只读，用于启动页展示）
 const authorDatabase = [
     { id: 1, book: '人间失格', author: '太宰治', quote: '我的不幸恰恰在于我缺乏拒绝的能力，我害怕一旦拒绝别人，便会在彼此心里留下永远无法愈合的裂痕。' },
