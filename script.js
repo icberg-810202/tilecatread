@@ -29,47 +29,7 @@ function checkPasswordStrength(password) {
     return strength;
 }
 
-// 显示密码强度
-function displayPasswordStrength(password) {
-    const strengthBar = document.getElementById('strengthBar');
-    const strengthText = document.getElementById('strengthText');
-    const strengthContainer = document.getElementById('regPasswordStrength');
-    
-    if (!password) {
-        strengthContainer.style.display = 'none';
-        strengthText.textContent = '';
-        return;
-    }
-    
-    strengthContainer.style.display = 'block';
-    const strength = checkPasswordStrength(password);
-    
-    // 清除之前的类
-    strengthBar.className = '';
-    
-    // 检查是否符合基本要求
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-        strengthBar.className = 'strength-weak';
-        strengthText.textContent = '密码必须同时包含字母和数字';
-        strengthText.style.color = '#ff4d4f';
-    } else if (password.length < 6) {
-        strengthBar.className = 'strength-weak';
-        strengthText.textContent = '密码长度必须至少为6位';
-        strengthText.style.color = '#ff4d4f';
-    } else if (strength === 2) {
-        strengthBar.className = 'strength-medium';
-        strengthText.textContent = '密码符合基本要求';
-        strengthText.style.color = '#faad14';
-    } else if (strength === 3) {
-        strengthBar.className = 'strength-medium';
-        strengthText.textContent = '密码强度：中';
-        strengthText.style.color = '#faad14';
-    } else {
-        strengthBar.className = 'strength-strong';
-        strengthText.textContent = '密码强度：强';
-        strengthText.style.color = '#52c41a';
-    }
-}
+// ... existing code ...
 
 // 作者数据库（只读）
 const authorDatabase = [
@@ -1940,6 +1900,14 @@ window.onload = function() {
     if (regPasswordInput) {
         regPasswordInput.addEventListener('input', function() {
             displayPasswordStrength(this.value);
+        });
+    }
+    
+    // 添加重置密码强度检测事件监听
+    const newPasswordInput = document.getElementById('newPassword');
+    if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', function() {
+            displayResetPasswordStrength(this.value);
         });
     }
     
