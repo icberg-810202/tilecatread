@@ -88,7 +88,7 @@ const authorDatabase = [
 
 // 配置标志，用于快速切换数据存储模式
 const STORAGE_CONFIG = {
-    useLocalStorageOnly: false, // 设置为false表示使用LeanCloud存储
+    useLocalStorageOnly: false, // 设置为false表示使用LeanCloud云服务
     debug: true // 启用调试日志
 };
 
@@ -103,7 +103,7 @@ let currentUserUid = null;
 
 // 当前用户信息
 let currentUser = null;
-let countdown = 5;
+let countdown = 10; // 设置为10秒倒计时
 let timer = null;
 let currentBookIndex = null;
 
@@ -150,60 +150,25 @@ function showPage(pageId) {
     }
 }
 
-// 跳转到登录页面 - 最简化版本
+// 跳转到登录页的全局函数
 function goToLoginPage() {
-    console.log('跳转到登录页面');
-    // 直接隐藏启动页并显示登录页
+    // 清除所有可能的定时器
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+    
+    // 直接操作DOM跳转到登录页
     const splashPage = document.getElementById('splashPage');
     const loginPage = document.getElementById('loginPage');
     
     if (splashPage) splashPage.classList.add('hidden');
     if (loginPage) loginPage.classList.remove('hidden');
     
-    // 同时调用原来的showPage函数确保其他功能正常
+    // 同时调用showPage函数确保其他功能正常
     if (typeof showPage === 'function') {
         showPage('loginPage');
     }
-}
-
-// 最简化的倒计时函数
-function startCountdown() {
-    console.log('开始简化倒计时');
-    
-    // 获取倒计时元素
-    const countdownElement = document.getElementById('countdown');
-    
-    // 设置初始值
-    if (countdownElement) {
-        countdownElement.textContent = '5';
-    }
-    
-    // 创建一个简单的倒计时数组
-    const countdownValues = [4, 3, 2, 1, 0];
-    let currentIndex = 0;
-    
-    // 使用setTimeout链式调用，避免setInterval可能的问题
-    function updateCountdown() {
-        if (currentIndex < countdownValues.length) {
-            const value = countdownValues[currentIndex];
-            if (countdownElement) {
-                countdownElement.textContent = value.toString();
-            }
-            console.log('倒计时:', value);
-            currentIndex++;
-            setTimeout(updateCountdown, 1000);
-        } else {
-            // 倒计时结束，跳转到登录页
-            console.log('倒计时结束，跳转到登录页');
-            goToLoginPage();
-        }
-    }
-    
-    // 启动倒计时
-    setTimeout(updateCountdown, 1000);
-    
-    // 绝对保障：无论如何，5秒后强制跳转
-    setTimeout(goToLoginPage, 5000);
 }
 
 function showRandomQuote() {
@@ -341,11 +306,6 @@ function showRandomQuote() {
     console.log('显示作者数据库语录:', randomQuote.book);
 }
 
-function goToLoginPage() {
-    console.log('跳转到登录页');
-    showPage('loginPage');
-}
-
 // 用户登录 - 优先使用COZE API，失败时降级到本地存储
 function login() {
     const username = document.getElementById('username').value.trim();
@@ -356,6 +316,7 @@ function login() {
         return;
     }
     
+    // 检查是否使用本地存储模式
     if (STORAGE_CONFIG.useLocalStorageOnly) {
         console.log('使用本地登录功能');
         localLogin(username, password);
@@ -365,9 +326,28 @@ function login() {
             .then(result => {
                 if (result.success) {
                     currentUserUid = result.data.id;
-                    currentUser = { phone: result.data.phone, id: result.data.id };
+                    currentUser = username;  // 修复：将currentUser设置为用户名字符串而不是对象
                     console.log('✅ 登录成功，正在加载用户数据...');
+                    
+                    // 确保userDatabase对象存在并初始化当前用户数据
+                    if (!userDatabase) {
+                        userDatabase = {};
+                    }
+                    
+                    // 确保当前用户数据结构存在
+                    if (!userDatabase[username]) {
+                        userDatabase[username] = {
+                            books: []
+                        };
+                    }
+                    
+                    // 更新UI
+                    document.getElementById('currentUser').textContent = username;
                     showPage('mainPage');
+                    
+                    // 渲染书籍列表
+                    renderBooksGrid();
+                    updateSelectionInfo();
                 } else {
                     alert(result.message || '登录失败');
                 }
@@ -787,10 +767,28 @@ function register() {
         registerUser(username, password)
             .then(user => {
                 console.log('LeanCloud注册成功:', user);
-                currentUserUid = user.objectId;
-                currentUser = { username: username };
-                // 显示主界面
-                showPage('mainPage');
+                if (user.success) {
+                    currentUserUid = user.data.id;
+                    currentUser = username;  // 修复：将currentUser设置为用户名字符串而不是对象
+                    // 初始化用户数据结构
+                    if (!userDatabase) {
+                        userDatabase = {};
+                    }
+                    userDatabase[currentUser] = {
+                        books: []
+                    };
+                    // 保存到本地存储
+                    try {
+                        localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userDatabase[currentUser]));
+                        console.log('用户数据已初始化并保存到本地');
+                    } catch (e) {
+                        console.error('保存用户数据失败:', e);
+                    }
+                    // 显示主界面
+                    showPage('mainPage');
+                } else {
+                    throw new Error(user.message || '注册失败');
+                }
             })
             .catch(error => {
                 console.error('LeanCloud注册失败:', error);
@@ -1100,13 +1098,19 @@ function backToLibrary() {
 // 搜索功能
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const userBooks = userDatabase[currentUser].books;
     
     if (!searchTerm) {
         alert('请输入搜索内容');
         return;
     }
     
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        alert('用户数据未初始化，请刷新页面重试');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
     const filteredBooks = userBooks.filter(book => 
         book.name.toLowerCase().includes(searchTerm) || 
         book.author.toLowerCase().includes(searchTerm)
@@ -1127,8 +1131,14 @@ function performSearch() {
 
 // 更新选择信息提示
 function updateSelectionInfo() {
-    const userBooks = userDatabase[currentUser].books;
-    const selectedBooks = userBooks.filter(book => book.selected);
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.warn('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const selectedBooks = userBooks.filter(book => book && book.selected);
     const infoElement = document.getElementById('selectionInfo');
     
     if (infoElement) {
@@ -1145,7 +1155,18 @@ function updateSelectionInfo() {
 function toggleBookSelection(bookIndex, event) {
     event.stopPropagation();
     
-    const userBooks = userDatabase[currentUser].books;
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    if (!userBooks[bookIndex]) {
+        console.error('书籍不存在');
+        return;
+    }
+    
     userBooks[bookIndex].selected = !userBooks[bookIndex].selected;
     
     saveUserDatabase();
@@ -1155,10 +1176,23 @@ function toggleBookSelection(bookIndex, event) {
 
 // 显示编辑书籍模态框
 function showEditBookModal(bookIndex) {
-    const book = userDatabase[currentUser].books[bookIndex];
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const book = userBooks[bookIndex];
+    
+    if (!book) {
+        console.error('书籍不存在');
+        return;
+    }
+    
     document.getElementById('editBookIndex').value = bookIndex;
-    document.getElementById('editBookName').value = book.name;
-    document.getElementById('editBookAuthor').value = book.author;
+    document.getElementById('editBookName').value = book.name || '';
+    document.getElementById('editBookAuthor').value = book.author || '';
     document.getElementById('editBookModal').classList.remove('hidden');
 }
 
@@ -1178,8 +1212,22 @@ function saveBookEdit() {
         return;
     }
     
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        alert('数据错误，请刷新页面重试');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    if (!userBooks[index]) {
+        console.error('书籍不存在');
+        alert('书籍数据错误，请刷新页面重试');
+        return;
+    }
+    
     // 更新书籍信息
-    const book = userDatabase[currentUser].books[index];
+    const book = userBooks[index];
     book.name = name;
     book.author = author || '未知作者';
     // 移除封面URL设置
@@ -1197,7 +1245,13 @@ function renderBooksGrid(filteredBooks = null) {
     
     grid.innerHTML = '';
     
-    const userBooks = userDatabase[currentUser].books;
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.warn('用户数据未初始化');
+        userDatabase[currentUser] = { books: [] };
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
     const booksToRender = filteredBooks || userBooks;
     const isSearching = filteredBooks !== null;
     
@@ -1231,8 +1285,11 @@ function renderBooksGrid(filteredBooks = null) {
     }
     // 修改书籍渲染逻辑，移除封面URL的使用
     booksToRender.forEach((book, index) => {
+        // 确保book对象存在
+        if (!book) return;
+        
         const actualIndex = isSearching ? 
-            userBooks.findIndex(b => b.name === book.name && b.author === book.author) : 
+            userBooks.findIndex(b => b && b.name === book.name && b.author === book.author) : 
             index;
             
         const bookCard = document.createElement('div');
@@ -1250,8 +1307,8 @@ function renderBooksGrid(filteredBooks = null) {
             </div>
             <div class="book-content">
                 ${bookIcon}
-                <div class="book-title">${book.name}</div>
-                <div class="book-author">${book.author}</div>
+                <div class="book-title">${book.name || '未知书名'}</div>
+                <div class="book-author">${book.author || '未知作者'}</div>
                 <div class="quote-count">${book.quotes ? book.quotes.length : 0} 条语录</div>
             </div>
         `;
@@ -1269,9 +1326,22 @@ function renderBooksGrid(filteredBooks = null) {
 }
 
 function goToQuotesPage(bookIndex) {
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const book = userBooks[bookIndex];
+    
+    if (!book) {
+        console.error('书籍不存在');
+        return;
+    }
+    
     currentBookIndex = bookIndex;
-    const book = userDatabase[currentUser].books[bookIndex];
-    document.getElementById('currentBookTitle').textContent = book.name;
+    document.getElementById('currentBookTitle').textContent = book.name || '未知书名';
     showPage('quotesPage');
     renderQuotesList();
 }
@@ -1310,17 +1380,31 @@ function addNewBook() {
         selected: false
     };
     
+    // 确保userDatabase[currentUser]存在
+    if (!userDatabase[currentUser]) {
+        userDatabase[currentUser] = {
+            books: []
+        };
+    }
+    
     if (!STORAGE_CONFIG.useLocalStorageOnly && currentUserUid) {
         // 使用LeanCloud存储
         console.log('使用LeanCloud添加书籍');
-        addBook(newBook)
-            .then(book => {
-                console.log('书籍添加成功:', book);
-                // 刷新本地数据后更新UI
-                loadUserData(currentUserUid);
-                closeAddBookModal();
-                renderBooksGrid();
-                updateSelectionInfo();
+        // 修复：使用正确的LeanCloud函数
+        addBook(currentUserUid, name, author)
+            .then(result => {
+                if (result.success) {
+                    console.log('书籍添加成功:', result);
+                    // 更新本地数据
+                    userDatabase[currentUser].books.push(newBook);
+                    saveUserDatabase();
+                    closeAddBookModal();
+                    renderBooksGrid();
+                    updateSelectionInfo();
+                } else {
+                    console.error('书籍添加失败:', result.message);
+                    alert('添加书籍失败: ' + result.message);
+                }
             })
             .catch(error => {
                 console.error('书籍添加失败:', error);
@@ -1340,9 +1424,22 @@ function addNewBook() {
 function deleteBook(bookIndex, event) {
     event.stopPropagation();
     
-    const book = userDatabase[currentUser].books[bookIndex];
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const book = userBooks[bookIndex];
+    
+    if (!book) {
+        console.error('书籍不存在');
+        return;
+    }
+    
     if (confirm(`确定要删除《${book.name}》吗？`)) {
-        userDatabase[currentUser].books.splice(bookIndex, 1);
+        userBooks.splice(bookIndex, 1);
         saveUserDatabase();
         renderBooksGrid();
         updateSelectionInfo();
@@ -1352,15 +1449,35 @@ function deleteBook(bookIndex, event) {
 // 显示编辑语录模态框
 function showEditQuoteModal(bookIndex, quoteIndex, event) {
     if (event) event.stopPropagation();
-    const book = userDatabase[currentUser].books[bookIndex];
-    const quote = book.quotes[quoteIndex];
+    
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const book = userBooks[bookIndex];
+    
+    if (!book) {
+        console.error('书籍不存在');
+        return;
+    }
+    
+    const quotes = book.quotes || [];
+    const quote = quotes[quoteIndex];
+    
+    if (!quote) {
+        console.error('语录不存在');
+        return;
+    }
     
     // 处理可能是字符串的旧格式语录
     const quoteObj = typeof quote === 'string' ? 
         { text: quote, page: null, tags: null } : quote;
     
     document.getElementById('editQuoteIndex').value = quoteIndex;
-    document.getElementById('editQuoteText').value = quoteObj.text;
+    document.getElementById('editQuoteText').value = quoteObj.text || '';
     document.getElementById('editQuotePage').value = quoteObj.page || '';
     document.getElementById('editQuoteTag').value = (quoteObj.tags && quoteObj.tags.join(', ')) || '';
     
@@ -1384,6 +1501,27 @@ function saveQuoteEdit() {
         return;
     }
     
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        alert('数据错误，请刷新页面重试');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    if (!userBooks[currentBookIndex]) {
+        console.error('书籍不存在');
+        alert('书籍数据错误，请刷新页面重试');
+        return;
+    }
+    
+    const quotes = userBooks[currentBookIndex].quotes || [];
+    if (!quotes[quoteIndex]) {
+        console.error('语录不存在');
+        alert('语录数据错误，请刷新页面重试');
+        return;
+    }
+    
     // 处理标签
     const tags = tagsInput ? tagsInput.split(/[,，]/).map(tag => tag.trim()).filter(tag => tag) : [];
     
@@ -1394,7 +1532,7 @@ function saveQuoteEdit() {
         tags: tags.length > 0 ? tags : null
     };
     
-    userDatabase[currentUser].books[currentBookIndex].quotes[quoteIndex] = updatedQuote;
+    quotes[quoteIndex] = updatedQuote;
     saveUserDatabase();
     closeEditQuoteModal();
     renderQuotesList();
@@ -1403,16 +1541,30 @@ function saveQuoteEdit() {
 // 语录管理
 function renderQuotesList() {
     const list = document.getElementById('quotesList');
-    const book = userDatabase[currentUser].books[currentBookIndex];
+    
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    const book = userBooks[currentBookIndex];
+    
+    if (!book) {
+        console.error('书籍不存在');
+        return;
+    }
     
     list.innerHTML = '';
     
-    if (!book.quotes || book.quotes.length === 0) {
+    const quotes = book.quotes || [];
+    if (quotes.length === 0) {
         list.innerHTML = '<div class="quote-item">暂无语录</div>';
         return;
     }
     
-    book.quotes.forEach((quote, index) => {
+    quotes.forEach((quote, index) => {
         // 处理可能是字符串的旧格式语录
         const quoteObj = typeof quote === 'string' ? 
             { text: quote, page: null, tags: null } : quote;
@@ -1437,7 +1589,7 @@ function renderQuotesList() {
         }
         
         quoteItem.innerHTML = `
-            <div class="quote-text">"${quoteObj.text}"</div>
+            <div class="quote-text">"${quoteObj.text || '无内容'}"</div>
             ${metadataHTML}
             <div class="quote-actions">
                 <button class="edit-quote-btn" onclick="showEditQuoteModal(${currentBookIndex}, ${index}, event)">编辑</button>
@@ -1469,11 +1621,25 @@ function addNewQuote() {
         return;
     }
     
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        alert('数据错误，请刷新页面重试');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    if (!userBooks[currentBookIndex]) {
+        console.error('书籍不存在');
+        alert('书籍数据错误，请刷新页面重试');
+        return;
+    }
+    
     // 处理标签
     const tags = tagsInput ? tagsInput.split(/[,，]/).map(tag => tag.trim()).filter(tag => tag) : [];
     
-    if (!userDatabase[currentUser].books[currentBookIndex].quotes) {
-        userDatabase[currentUser].books[currentBookIndex].quotes = [];
+    if (!userBooks[currentBookIndex].quotes) {
+        userBooks[currentBookIndex].quotes = [];
     }
     
     // 创建新语录对象
@@ -1486,14 +1652,21 @@ function addNewQuote() {
     if (!STORAGE_CONFIG.useLocalStorageOnly && currentUserUid) {
         // 使用LeanCloud存储
         console.log('使用LeanCloud添加语录');
-        const book = userDatabase[currentUser].books[currentBookIndex];
-        addQuote(newQuote, book)
-            .then(quote => {
-                console.log('语录添加成功:', quote);
-                // 刷新本地数据后更新UI
-                loadUserData(currentUserUid);
-                closeAddQuoteModal();
-                renderQuotesList();
+        const book = userBooks[currentBookIndex];
+        // 修复：使用正确的LeanCloud函数
+        addQuote(book.id || 'unknown', text, page, tags)
+            .then(result => {
+                if (result.success) {
+                    console.log('语录添加成功:', result);
+                    // 更新本地数据
+                    userBooks[currentBookIndex].quotes.push(newQuote);
+                    saveUserDatabase();
+                    closeAddQuoteModal();
+                    renderQuotesList();
+                } else {
+                    console.error('语录添加失败:', result.message);
+                    alert('添加语录失败: ' + result.message);
+                }
             })
             .catch(error => {
                 console.error('语录添加失败:', error);
@@ -1501,7 +1674,7 @@ function addNewQuote() {
             });
     } else {
         // 使用本地存储
-        userDatabase[currentUser].books[currentBookIndex].quotes.push(newQuote);
+        userBooks[currentBookIndex].quotes.push(newQuote);
         saveUserDatabase();
         closeAddQuoteModal();
         renderQuotesList();
@@ -1509,8 +1682,22 @@ function addNewQuote() {
 }
 
 function deleteQuote(quoteIndex) {
+    // 确保用户数据存在
+    if (!userDatabase || !userDatabase[currentUser]) {
+        console.error('用户数据未初始化');
+        return;
+    }
+    
+    const userBooks = userDatabase[currentUser].books || [];
+    if (!userBooks[currentBookIndex]) {
+        console.error('书籍不存在');
+        return;
+    }
+    
+    const quotes = userBooks[currentBookIndex].quotes || [];
+    
     if (confirm('确定要删除这条语录吗？')) {
-        userDatabase[currentUser].books[currentBookIndex].quotes.splice(quoteIndex, 1);
+        quotes.splice(quoteIndex, 1);
         saveUserDatabase();
         renderQuotesList();
     }
@@ -1530,29 +1717,27 @@ function saveUserDatabase() {
         userDatabase = {};
     }
     
+    // 确保当前用户数据存在
+    if (!userDatabase[currentUser]) {
+        userDatabase[currentUser] = {
+            books: []
+        };
+    }
+    
     const userData = userDatabase[currentUser];
     
     // 直接保存到本地存储
-    // 1. 不再使用COZE云数据库
-    // saveUserDataToCloud(currentUser, userData)
-    //     .catch(error => {
-    //         console.error('保存到COZE云数据库失败，仅保存到本地:', error);
-    //     })
-    //     .finally(() => {
-    //         // 2. 无论云端保存是否成功，都保存到本地存储作为备份
-    //         try {
-    //             localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
-    //             console.log('用户数据已保存到本地存储');
-    //         } catch (error) {
-    //             console.error('用户数据保存失败:', error);
-    //             alert('保存数据失败，请稍后重试');
-    //         }
-    //     });
+    try {
+        localStorage.setItem('userDatabase_' + currentUser, JSON.stringify(userData));
+        console.log('用户数据已保存到本地存储');
+    } catch (error) {
+        console.error('用户数据保存失败:', error);
+        alert('保存数据失败，请稍后重试');
+    }
 }
 
 // 全局变量，用于倒计时控制
-// let timer = null; // 这个变量已经在文件前面定义了
-// let countdown = 5; // 这个变量也在文件前面定义了
+
 
 // 跳转到登录页的全局函数
 function goToLoginPage() {
@@ -1562,10 +1747,10 @@ function goToLoginPage() {
         timer = null;
     }
     
+    // 直接操作DOM跳转到登录页
     const splashPage = document.getElementById('splashPage');
     const loginPage = document.getElementById('loginPage');
     
-    // 直接操作DOM跳转到登录页
     if (splashPage) splashPage.classList.add('hidden');
     if (loginPage) loginPage.classList.remove('hidden');
     
@@ -1587,24 +1772,24 @@ function startCountdown() {
         countdownElement.textContent = '10';
     }
     
-    // 创建一个简单的倒计时数组
-    const countdownValues = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-    let currentIndex = 0;
+    // 重置倒计时变量
+    countdown = 10;
     
     // 使用setTimeout链式调用，避免setInterval可能的问题
     function updateCountdown() {
-        if (currentIndex < countdownValues.length) {
-            const value = countdownValues[currentIndex];
-            if (countdownElement) {
-                countdownElement.textContent = value.toString();
-            }
-            console.log('倒计时:', value);
-            currentIndex++;
-            timer = setTimeout(updateCountdown, 1000);
-        } else {
+        countdown--;
+        if (countdownElement) {
+            countdownElement.textContent = countdown.toString();
+        }
+        console.log('倒计时:', countdown);
+        
+        if (countdown <= 0) {
             // 倒计时结束，跳转到登录页
             console.log('倒计时结束，跳转到登录页');
             goToLoginPage();
+        } else {
+            // 继续倒计时
+            timer = setTimeout(updateCountdown, 1000);
         }
     }
     
@@ -1620,7 +1805,7 @@ window.onload = function() {
     console.log('页面加载完成，开始初始化');
     
     // 重置倒计时变量
-    countdown = 5;
+    countdown = 10;
     timer = null; // 重置定时器变量
     
     // 初始化用户数据和注册用户信息
@@ -1646,9 +1831,16 @@ window.onload = function() {
         currentUserToken = savedToken;
         currentUserUid = savedUsername; // 使用用户名作为用户ID
         
-        // 确保userDatabase对象存在
+        // 确保userDatabase对象存在并初始化当前用户数据
         if (!userDatabase) {
             userDatabase = {};
+        }
+        
+        // 确保当前用户数据结构存在
+        if (!userDatabase[savedUsername]) {
+            userDatabase[savedUsername] = {
+                books: []
+            };
         }
         
         // 优化：优先从本地存储加载数据，快速启动应用
@@ -1716,6 +1908,19 @@ window.onload = function() {
                 renderBooksGrid();
                 updateSelectionInfo();
             }
+        } catch (error) {
+            console.error('加载用户数据失败:', error);
+            // 即使加载失败，也要确保UI可以正常显示
+            if (document.getElementById('currentUser')) {
+                document.getElementById('currentUser').textContent = savedUsername;
+            }
+            if (typeof showPage === 'function') {
+                showPage('mainPage');
+            }
+            
+            // 渲染书籍列表
+            renderBooksGrid();
+            updateSelectionInfo();
         }
     }
     
@@ -1779,40 +1984,8 @@ window.onload = function() {
         // 立即加载语录
         loadRandomQuote();
         
-        // 设置倒计时初始值为10秒
-        let seconds = 10;
-        if (countdownElement) {
-            countdownElement.textContent = seconds.toString();
-        }
-        console.log('开始10秒倒计时');
-        
-        // 创建一个简单的倒计时函数
-        function updateCountdown() {
-            seconds--;
-            if (countdownElement) {
-                countdownElement.textContent = seconds.toString();
-            }
-            console.log('倒计时更新:', seconds);
-            
-            if (seconds <= 0) {
-                console.log('倒计时结束，跳转到登录页');
-                goToLoginPage();
-            } else {
-                // 继续倒计时，使用全局timer变量存储引用
-                timer = setTimeout(updateCountdown, 1000);
-            }
-        }
-        
-        // 立即启动倒计时
-        updateCountdown();
-        
-        // 安全保障：无论如何，11秒后强制跳转（额外1秒容错）
-        setTimeout(function() {
-            console.log('安全保障：强制跳转到登录页');
-            goToLoginPage();
-        }, 11000);
-        
-        // 倒计时功能已完整实现，无需兼容性处理
+        // 启动倒计时功能
+        startCountdown();
     }
     
     // 添加跳过功能
@@ -1864,7 +2037,7 @@ window.onload = function() {
     }
     
     // 移除封面上传相关的事件监听器
-}
+};
 
 // 添加错误处理
 window.addEventListener('error', function(e) {

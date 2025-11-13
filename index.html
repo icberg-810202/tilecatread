@@ -6,8 +6,8 @@
     <title>Bwhisper</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- LeanCloud SDK - 使用官方推荐的CDN -->
-    <script src="https://unpkg.com/leancloud-storage@4.13.0/dist/av-min.js"></script>
+    <!-- LeanCloud SDK - 使用本地文件避免跟踪防护问题 -->
+    <script src="av-min.js"></script>
     
     <style>
         /* 密码强度指示器样式 */
@@ -38,9 +38,40 @@
             color: #666;
             margin-bottom: 10px;
         }
+        /* 调试链接样式 */
+        .debug-links {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        .debug-links a {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .debug-links a:hover {
+            background: rgba(0,0,0,0.9);
+        }
     </style>
 </head>
 <body>
+    <!-- 调试链接 -->
+    <div class="debug-links">
+        <a href="clear-local-storage.html" target="_blank">清理存储</a>
+        <a href="test-leancloud-connection.html" target="_blank">测试连接</a>
+        <a href="cors-test.html" target="_blank">CORS诊断</a>
+        <a href="network-diag.html" target="_blank">网络诊断</a>
+        <a href="simple-network-test.html" target="_blank">基础网络测试</a>
+        <a href="security-check.html" target="_blank">安全配置检查</a>
+        <a href="current-config-test.html" target="_blank">当前配置测试</a>
+        <a href="local-test-leancloud.html" target="_blank">LeanCloud测试</a>
+    </div>
     <!-- 启动页 -->
     <div id="splashPage" class="page">
         <div class="quote-card">
@@ -295,6 +326,7 @@
     <!-- 应用脚本 -->
     <script src="leancloud-config.js"></script>
     <script src="playback-controller.js"></script>
+    <script src="script.js"></script>
     <script src="script-leancloud.js"></script>
     
     <!-- 错误处理 -->

@@ -62,6 +62,7 @@ async function loginUser(phone, password) {
     };
   }
   try {
+    // 先尝试使用手机号登录
     const user = await LEANCLOUD_CONFIG.AV.User.logIn(phone, password);
     
     return {
@@ -73,10 +74,24 @@ async function loginUser(phone, password) {
       }
     };
   } catch (error) {
-    return {
-      success: false,
-      message: error.message || '登录失败'
-    };
+    // 如果手机号登录失败，尝试使用用户名登录
+    try {
+      const user = await LEANCLOUD_CONFIG.AV.User.logInWithMobilePhone(phone, password);
+      
+      return {
+        success: true,
+        message: '登录成功',
+        data: {
+          phone: user.get('mobilePhoneNumber'),
+          id: user.id
+        }
+      };
+    } catch (secondError) {
+      return {
+        success: false,
+        message: error.message || secondError.message || '登录失败'
+      };
+    }
   }
 }
 
