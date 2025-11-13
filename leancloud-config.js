@@ -83,7 +83,9 @@ if (initLeanCloud()) {
 }
 
 // 显示随机语录
-async function displayRandomQuote() {
+function displayRandomQuote() {
+    console.log('📖 displayRandomQuote 函数被调用');
+    
     try {
         // 使用默认语录
         const defaultQuotes = [
@@ -106,26 +108,40 @@ async function displayRandomQuote() {
         ];
         
         const randomQuote = defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
+        console.log('📖 选中的语录:', randomQuote.content);
+        
         const quoteContent = document.getElementById('splashQuoteContent');
         const quoteSource = document.getElementById('splashQuoteSource');
         
+        console.log('📖 quoteContent 元素:', quoteContent ? '找到' : '未找到');
+        console.log('📖 quoteSource 元素:', quoteSource ? '找到' : '未找到');
+        
         if (quoteContent) {
             quoteContent.textContent = randomQuote.content;
+            console.log('✅ 已设置语录内容:', randomQuote.content);
+        } else {
+            console.error('❌ 找不到 splashQuoteContent 元素');
         }
+        
         if (quoteSource) {
             quoteSource.textContent = `—— ${randomQuote.source}`;
+            console.log('✅ 已设置语录来源:', `—— ${randomQuote.source}`);
+        } else {
+            console.error('❌ 找不到 splashQuoteSource 元素');
         }
     } catch (error) {
-        console.warn('获取随机语录失败，使用默认语录:', error);
+        console.error('❌ displayRandomQuote 执行失败:', error);
         // 出错时使用默认语录
         const quoteContent = document.getElementById('splashQuoteContent');
         const quoteSource = document.getElementById('splashQuoteSource');
         
         if (quoteContent) {
             quoteContent.textContent = "阅读是一座随身携带的避难所。";
+            console.log('✅ 已设置默认语录内容');
         }
         if (quoteSource) {
             quoteSource.textContent = "—— 毛姆";
+            console.log('✅ 已设置默认语录来源');
         }
     }
 }
