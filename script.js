@@ -1877,22 +1877,8 @@ window.addEventListener('error', function(e) {
 });
 
 // ============================================
-// 忘记密码相关函数
+// 验证和辅助函数
 // ============================================
-function showForgotPassword() {
-    showPage('forgotPasswordStep1');
-    document.getElementById('resetPhone').value = '';
-    document.getElementById('verifyCode').value = '';
-    const sendBtn = document.getElementById('sendCodeBtn');
-    if (sendBtn) {
-        sendBtn.disabled = false;
-        sendBtn.textContent = '获取验证码';
-    }
-}
-
-function backToStep1() {
-    showPage('forgotPasswordStep1');
-}
 
 function validatePhone(phone) {
     const phoneRegex = /^1[3-9]\d{9}$/;
@@ -1904,72 +1890,200 @@ function generateVerifyCode() {
 }
 
 async function sendSMS(phone, code) {
-    console.log(`📧 模拟发送 ${code} 到 ${phone}`);
-    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+    console.log(`📧 模拟发送短信到 ${phone}，验证码: ${code}`);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({ success: true });
+        }, 500);
+    });
 }
 
-let sendCodeTimer = null;
-let verificationCodes = {};
+function checkPasswordStrength(password) {
+    const meetsRequirements = password.length >= 6 && 
+                             /[a-zA-Z]/.test(password) && 
+                             /[0-9]/.test(password);
+    if (!meetsRequirements) return 0;
+    let strength = 2;
+    if (password.length >= 12) strength++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return strength;
+}
+
+function displayPasswordStrength(password) {
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+    const strengthContainer = document.getElementById('regPasswordStrength');
+    if (!strengthBar || !strengthText || !strengthContainer) return;
+    if (!password) {
+        strengthContainer.style.display = 'none';
+        strengthText.textContent = '';
+        return;
+    }
+    strengthContainer.style.display = 'block';
+    const strength = checkPasswordStrength(password);
+    strengthBar.className = '';
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        strengthBar.className = 'strength-weak';
+        strengthText.textContent = '密码必须同时包含字母和数字';
+        strengthText.style.color = '#ff4d4f';
+    } else if (password.length < 6) {
+        strengthBar.className = 'strength-weak';
+        strengthText.textContent = '密码長度必須至少為6位';
+        strengthText.style.color = '#ff4d4f';
+    } else if (strength === 2) {
+        strengthBar.className = 'strength-medium';
+        strengthText.textContent = '密码符合基本要求';
+        strengthText.style.color = '#faad14';
+    } else if (strength === 3) {
+        strengthBar.className = 'strength-medium';
+        strengthText.textContent = '密码强度：中';
+        strengthText.style.color = '#faad14';
+    } else {
+        strengthBar.className = 'strength-strong';
+        strengthText.textContent = '密码强度：强';
+        strengthText.style.color = '#52c41a';
+    }
+}
+
+function displayResetPasswordStrength(password) {
+    const strengthBar = document.getElementById('resetStrengthBar');
+    const strengthText = document.getElementById('resetStrengthText');
+    const strengthContainer = document.getElementById('resetPasswordStrength');
+    if (!strengthBar || !strengthText || !strengthContainer) return;
+    if (!password) {
+        strengthContainer.style.display = 'none';
+        strengthText.textContent = '';
+        return;
+    }
+    strengthContainer.style.display = 'block';
+    const strength = checkPasswordStrength(password);
+    strengthBar.className = '';
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        strengthBar.className = 'strength-weak';
+        strengthText.textContent = '密码必须同时包含字母和数字';
+        strengthText.style.color = '#ff4d4f';
+    } else if (password.length < 6) {
+        strengthBar.className = 'strength-weak';
+        strengthText.textContent = '密码長度必須至少為6位';
+        strengthText.style.color = '#ff4d4f';
+    } else if (strength === 2) {
+        strengthBar.className = 'strength-medium';
+        strengthText.textContent = '密码符合基本要求';
+        strengthText.style.color = '#faad14';
+    } else if (strength === 3) {
+        strengthBar.className = 'strength-medium';
+        strengthText.textContent = '密码强度：中';
+        strengthText.style.color = '#faad14';
+    } else {
+        strengthBar.className = 'strength-strong';
+        strengthText.textContent = '密码强度：强';
+        strengthText.style.color = '#52c41a';
+    }
+}
+
+// ============================================
+// 忘记密码相关函数
+// ============================================
+
+let sendCodeCountdown = 0;
+
+function showForgotPassword() {
+    showPage('forgotPasswordStep1');
+    document.getElementById('resetPhone').value = '';
+    document.getElementById('verifyCode').value = '';
+    const sendBtn = document.getElementById('sendCodeBtn');
+    sendBtn.disabled = false;
+    sendBtn.textContent = '获取验证码';
+    if (sendCodeTimer) {
+        clearInterval(sendCodeTimer);
+        sendCodeTimer = null;
+    }
+}
+
+function backToStep1() {
+    showPage('forgotPasswordStep1');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+    const strengthContainer = document.getElementById('resetPasswordStrength');
+    if (strengthContainer) {
+        const bar = strengthContainer.querySelector('.strength-bar');
+        const text = strengthContainer.querySelector('.strength-text');
+        if (bar) bar.className = 'strength-bar';
+        if (text) text.textContent = '';
+    }
+}
 
 async function sendVerifyCode() {
     const phone = document.getElementById('resetPhone').value.trim();
-    const sendBtn = document.getElementById('sendCodeBtn');
-    
     if (!validatePhone(phone)) {
         alert('请输入正确的手机号');
         return;
     }
-    
     if (!registeredUsers[phone]) {
         alert('该手机号未注册');
         return;
     }
-    
-    const code = generateVerifyCode();
-    verificationCodes[phone] = { code, expireTime: Date.now() + 5 * 60 * 1000 };
-    await sendSMS(phone, code);
-    alert(`验证码: ${code} (有效期5分钟)`);
-    
-    if (sendBtn) {
-        sendBtn.disabled = true;
-        let countdown = 60;
-        sendBtn.textContent = `重新(${countdown}s)`;
-        sendCodeTimer = setInterval(() => {
-            countdown--;
-            sendBtn.textContent = countdown > 0 ? `重新(${countdown}s)` : '获取验证码';
-            if (countdown <= 0) {
-                clearInterval(sendCodeTimer);
-                sendBtn.disabled = false;
-            }
-        }, 1000);
+    try {
+        const code = generateVerifyCode();
+        const expireTime = Date.now() + 5 * 60 * 1000;
+        verificationCodes[phone] = {
+            code: code,
+            expireTime: expireTime
+        };
+        await sendSMS(phone, code);
+        alert(`验证码已发送!
+
+【测试模式】验证码: ${code}
+有效期5分钟`);
+        startSendCodeCountdown();
+    } catch (error) {
+        console.error('发送验证码失败:', error);
+        alert('发送验证码失败，请稍后重试');
     }
+}
+
+function startSendCodeCountdown() {
+    const sendBtn = document.getElementById('sendCodeBtn');
+    sendCodeCountdown = 60;
+    sendBtn.disabled = true;
+    sendBtn.textContent = `${sendCodeCountdown}s 后重试`;
+    if (sendCodeTimer) {
+        clearInterval(sendCodeTimer);
+    }
+    sendCodeTimer = setInterval(() => {
+        sendCodeCountdown--;
+        if (sendCodeCountdown <= 0) {
+            clearInterval(sendCodeTimer);
+            sendCodeTimer = null;
+            sendBtn.disabled = false;
+            sendBtn.textContent = '获取验证码';
+        } else {
+            sendBtn.textContent = `${sendCodeCountdown}s 后重试`;
+        }
+    }, 1000);
 }
 
 function verifyCodeAndNext() {
     const phone = document.getElementById('resetPhone').value.trim();
     const code = document.getElementById('verifyCode').value.trim();
-    
     if (!validatePhone(phone)) {
         alert('请输入正确的手机号');
         return;
     }
-    
     if (code.length !== 6) {
         alert('请输入6位验证码');
         return;
     }
-    
     const savedCode = verificationCodes[phone];
     if (!savedCode || Date.now() > savedCode.expireTime) {
         alert('验证码已过期');
         return;
     }
-    
     if (savedCode.code !== code) {
         alert('验证码错误');
         return;
     }
-    
     showPage('forgotPasswordStep2');
     document.getElementById('newPassword').value = '';
     document.getElementById('confirmNewPassword').value = '';
@@ -1979,25 +2093,30 @@ async function resetPassword() {
     const phone = document.getElementById('resetPhone').value.trim();
     const newPassword = document.getElementById('newPassword').value.trim();
     const confirmPassword = document.getElementById('confirmNewPassword').value.trim();
-    
     if (!newPassword) {
         alert('请输入新密码');
         return;
     }
-    
-    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword) || newPassword.length < 6) {
-        alert('密码要求：6位以上、必须包含字母和数字');
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+        alert('密码必须同时包含字母和数字');
         return;
     }
-    
+    if (newPassword.length < 6) {
+        alert('密码長度必須至少為6位');
+        return;
+    }
     if (newPassword !== confirmPassword) {
-        alert('两次密码不一致');
+        alert('两次输入的密码不一致');
         return;
     }
-    
-    registeredUsers[phone] = newPassword;
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-    delete verificationCodes[phone];
-    alert('✅ 密码重置成功');
-    backToLogin();
+    try {
+        registeredUsers[phone] = newPassword;
+        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        delete verificationCodes[phone];
+        alert('✅ 密码重置成功！请使用新密码登录');
+        backToLogin();
+    } catch (error) {
+        console.error('重置密码失败:', error);
+        alert('重置密码失败: ' + error.message);
+    }
 }
