@@ -43,6 +43,12 @@ function initLeanCloud() {
             disableCache: !storageAvailable
         });
         
+        // ♥♥♥ 改进：一旦初始化成功，设置useLeanCloud为true
+        if (typeof useLeanCloud !== 'undefined') {
+            useLeanCloud = true;  // 清除该上次的false被设置
+            console.log('🔐 已设置 useLeanCloud = true');
+        }
+        
         console.log('✅ LeanCloud初始化成功');
         return true;
     } catch (error) {

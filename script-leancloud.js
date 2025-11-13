@@ -346,9 +346,9 @@ async function leancloudResetPassword(username, newPassword) {
 // 初始化检查
 // ============================================
 
-if (isLeanCloudAvailable()) {
-    console.log('✅ LeanCloud 可用，将使用云端存储');
-} else {
-    console.warn('⚠️  LeanCloud 不可用，将使用本地存储');
-    useLeanCloud = false;
+// 将useLeanCloud的判断程序支持到initLeanCloud函数中执行
+if (typeof window !== 'undefined') {
+    // ♥♥♥ 改进：待LeanCloud的initLeanCloud完成后，就会useLeanCloud设置为true
+    // 客户端应用一上来就是默认按照useLeanCloud = true来启动（第7行）
+    console.log('[script-leancloud.js] 当前 useLeanCloud =', useLeanCloud);
 }

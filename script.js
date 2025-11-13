@@ -858,6 +858,8 @@ async function attemptLeanCloudRegister(username, password) {
         }
     } catch (error) {
         console.error('❌ LeanCloud注册失败:', error);
+        console.error('❌ 具体错误:', error.message || error);
+        console.error('❌ 错误类型:', error.code || error.name);
         console.log('回退到本地注册...');
         
         // 要求的错误处理
