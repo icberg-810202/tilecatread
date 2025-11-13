@@ -1770,12 +1770,20 @@ window.onload = function() {
         // 用户未登录
         console.log('用户未登录');
         
-        // 显示启动页
+        // 检查是否已经在leancloud-config.js中初始化过启动页
+        // 如果已经初始化过，就不再重复初始化
+        const splashPage = document.getElementById('splashPage');
+        const loginPage = document.getElementById('loginPage');
+        
+        // 如果当前已经在登录页，说明启动页已处理完成
+        if (loginPage && !loginPage.classList.contains('hidden')) {
+            console.log('✅ 启动页已由 leancloud-config.js 处理，跳过重复初始化');
+            return; // 直接返回，不再重复初始化
+        }
+        
         console.log('显示启动页');
         
         // 直接操作DOM确保启动页显示
-        const splashPage = document.getElementById('splashPage');
-        const loginPage = document.getElementById('loginPage');
         const countdownElement = document.getElementById('countdown');
         const quoteContent = document.getElementById('splashQuoteContent');
         const quoteSource = document.getElementById('splashQuoteSource');
