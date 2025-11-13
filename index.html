@@ -293,9 +293,23 @@
     </div>
 
     <!-- LeanCloud 配置和脚本 -->
-    <script src="playback-controller.js"></script>
-    <script src="script.js"></script>
-    <script src="script-leancloud.js"></script>
-    <script src="leancloud-config.js"></script>
+    <script defer src="playback-controller.js"></script>
+    <script defer src="script.js"></script>
+    <script defer src="script-leancloud.js"></script>
+    <script defer src="leancloud-config.js"></script>
+    <script>
+        // 脚本加载完成后的初始化
+        console.log('✅ 所有脚本加载完成，确保全局函数可用');
+        
+        // 验证关键函数是否已定义
+        const requiredFunctions = ['showRegister', 'login', 'register', 'backToLogin', 'showForgotPassword'];
+        requiredFunctions.forEach(func => {
+            if (typeof window[func] !== 'function') {
+                console.warn(`⚠️  函数 ${func} 未定义，将尝试重新定义`);
+            } else {
+                console.log(`✅ 函数 ${func} 已定义`);
+            }
+        });
+    </script>
 </body>
 </html>

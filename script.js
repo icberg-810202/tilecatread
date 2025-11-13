@@ -1875,3 +1875,129 @@ window.onload = function() {
 window.addEventListener('error', function(e) {
     console.error('全局错误:', e.error);
 });
+
+// ============================================
+// 忘记密码相关函数
+// ============================================
+function showForgotPassword() {
+    showPage('forgotPasswordStep1');
+    document.getElementById('resetPhone').value = '';
+    document.getElementById('verifyCode').value = '';
+    const sendBtn = document.getElementById('sendCodeBtn');
+    if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = '获取验证码';
+    }
+}
+
+function backToStep1() {
+    showPage('forgotPasswordStep1');
+}
+
+function validatePhone(phone) {
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    return phoneRegex.test(phone);
+}
+
+function generateVerifyCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendSMS(phone, code) {
+    console.log(`📧 模拟发送 ${code} 到 ${phone}`);
+    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+}
+
+let sendCodeTimer = null;
+let verificationCodes = {};
+
+async function sendVerifyCode() {
+    const phone = document.getElementById('resetPhone').value.trim();
+    const sendBtn = document.getElementById('sendCodeBtn');
+    
+    if (!validatePhone(phone)) {
+        alert('请输入正确的手机号');
+        return;
+    }
+    
+    if (!registeredUsers[phone]) {
+        alert('该手机号未注册');
+        return;
+    }
+    
+    const code = generateVerifyCode();
+    verificationCodes[phone] = { code, expireTime: Date.now() + 5 * 60 * 1000 };
+    await sendSMS(phone, code);
+    alert(`验证码: ${code} (有效期5分钟)`);
+    
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        let countdown = 60;
+        sendBtn.textContent = `重新(${countdown}s)`;
+        sendCodeTimer = setInterval(() => {
+            countdown--;
+            sendBtn.textContent = countdown > 0 ? `重新(${countdown}s)` : '获取验证码';
+            if (countdown <= 0) {
+                clearInterval(sendCodeTimer);
+                sendBtn.disabled = false;
+            }
+        }, 1000);
+    }
+}
+
+function verifyCodeAndNext() {
+    const phone = document.getElementById('resetPhone').value.trim();
+    const code = document.getElementById('verifyCode').value.trim();
+    
+    if (!validatePhone(phone)) {
+        alert('请输入正确的手机号');
+        return;
+    }
+    
+    if (code.length !== 6) {
+        alert('请输入6位验证码');
+        return;
+    }
+    
+    const savedCode = verificationCodes[phone];
+    if (!savedCode || Date.now() > savedCode.expireTime) {
+        alert('验证码已过期');
+        return;
+    }
+    
+    if (savedCode.code !== code) {
+        alert('验证码错误');
+        return;
+    }
+    
+    showPage('forgotPasswordStep2');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+}
+
+async function resetPassword() {
+    const phone = document.getElementById('resetPhone').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmNewPassword').value.trim();
+    
+    if (!newPassword) {
+        alert('请输入新密码');
+        return;
+    }
+    
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword) || newPassword.length < 6) {
+        alert('密码要求：6位以上、必须包含字母和数字');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        alert('两次密码不一致');
+        return;
+    }
+    
+    registeredUsers[phone] = newPassword;
+    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    delete verificationCodes[phone];
+    alert('✅ 密码重置成功');
+    backToLogin();
+}
