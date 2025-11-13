@@ -1,3 +1,48 @@
+// ==================== LeanCloud 初始化 ====================
+// 直接在script.js中初始化LeanCloud，不依赖外部config文件
+if (typeof AV !== 'undefined') {
+    console.log('LeanCloud SDK 已加载');
+    
+    // LeanCloud 配置
+    const LEANCLOUD_CONFIG = {
+        appId: 'EeNvUrhhjnQRJoRfMxqE8Qxh-MdYXbMMI',
+        appKey: 'R3oHn9jLLOt88EgFqk9lSAc9',
+        serverURL: 'https://eenvurhh.api.lncldglobal.com'
+    };
+    
+    try {
+        // 检查存储可用性
+        let storageAvailable = true;
+        try {
+            const testKey = '__leancloud_test__';
+            localStorage.setItem(testKey, 'test');
+            localStorage.removeItem(testKey);
+        } catch (e) {
+            console.warn('⚠️  浏览器跟踪防护限制了存储访问，将使用内存存储');
+            storageAvailable = false;
+        }
+        
+        // 初始化 LeanCloud
+        AV.init({
+            appId: LEANCLOUD_CONFIG.appId,
+            appKey: LEANCLOUD_CONFIG.appKey,
+            serverURL: LEANCLOUD_CONFIG.serverURL,
+            // 禁用缓存以避免跟踪防护问题
+            disableCache: !storageAvailable
+        });
+        
+        console.log('✅ LeanCloud 初始化成功');
+        if (!storageAvailable) {
+            console.warn('⚠️  存储限制已启用，将仅使用内存存储');
+        }
+    } catch (error) {
+        console.error('❌ LeanCloud 初始化失败:', error);
+    }
+} else {
+    console.warn('⚠️  LeanCloud SDK 未加载');
+}
+
+// ==================== 应用数据 ====================
 // 简单的密码哈希函数（实际项目中建议使用专业的加密库如bcrypt）
 function hashPassword(password) {
     // 这是一个简化的哈希实现，仅用于演示
