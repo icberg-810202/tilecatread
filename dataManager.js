@@ -141,7 +141,7 @@ class DataManager {
             const userData = await jsonbinLoadUserData(userId);
             return userData.books || [];
         } catch (error) {
-            console.error('❌ 加载书籍失表:', error);
+            console.error('❌ 加载书籍失败:', error);
             return [];
         }
     }
