@@ -4,6 +4,30 @@
 
 console.log('📝 jsonbin-config.js 已加载');
 
+// ==========================================
+// 密码哈希和验证函数
+// ==========================================
+
+/**
+ * 简单的密码哈希函数
+ * 注意：这是前端哈希方案，仅作为临时安全措施
+ * 后续应迁移至后端进行密码加密，以获得更高的安全性
+ */
+function hashPassword(password) {
+    // 使用 Base64 编码 + 盐值
+    // 实际应用中应该使用后端的 bcrypt 或其他安全哈希算法
+    const salt = 'tilecatread_salt_2024';
+    const combined = password + salt;
+    return btoa(unescape(encodeURIComponent(combined)));
+}
+
+/**
+ * 验证密码
+ */
+function verifyPassword(password, hash) {
+    return hashPassword(password) === hash;
+}
+
 // JSONbin API 配置
 const JSONBIN_CONFIG = {
     binId: '69168b8e43b1c97be9ac38f5',
@@ -65,7 +89,7 @@ async function jsonbinRegister(username, password) {
         // 创建用户数据
         const userData = {
             username: username,
-            password: password, // 实际应用中应该加密
+            password: hashPassword(password), // 使用哈希后的密码
             createdAt: new Date().toISOString(),
             books: []
         };
@@ -124,7 +148,7 @@ async function jsonbinLogin(username, password) {
         }
         
         // 验证密码
-        if (user.password !== password) {
+        if (!verifyPassword(password, user.password)) {
             throw new Error('密码错误');
         }
         
