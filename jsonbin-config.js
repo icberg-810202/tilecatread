@@ -104,32 +104,8 @@ async function jsonbinRegister(username, password) {
             username: username,
             password: hashPassword(password), // 加密密码
             createdAt: new Date().toISOString(),
-            books: []
+            books: [] // 新用户书库为空
         };
-        
-        // 🎁 为新用户添加默认语录库
-        if (typeof DEFAULT_QUOTES_LIBRARY !== 'undefined') {
-            console.log('📚 正在为新用户添加默认语录库...');
-            const defaultBook = {
-                id: `book_${Date.now()}`,
-                name: DEFAULT_QUOTES_LIBRARY.bookName,
-                author: DEFAULT_QUOTES_LIBRARY.author,
-                quotes: DEFAULT_QUOTES_LIBRARY.quotes.map((q, index) => ({
-                    id: `quote_${Date.now()}_${index}`,
-                    text: q.text,
-                    author: q.author,
-                    page: q.page || '',
-                    tags: [],
-                    createdAt: new Date().toISOString()
-                })),
-                selected: false,
-                createdAt: new Date().toISOString()
-            };
-            userData.books.push(defaultBook);
-            console.log('✅ 已添加默认语录库，共', DEFAULT_QUOTES_LIBRARY.quotes.length, '条语录');
-        } else {
-            console.warn('⚠️ 默认语录库未加载，跳过添加');
-        }
         
         // 初始化数据结构
         if (!existingData.users) existingData.users = {};

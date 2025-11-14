@@ -92,6 +92,9 @@ function showPage(pageId) {
 function showSplashPage() {
     showPage('splashPage');
     
+    // 📚 显示默认语录
+    displayDefaultQuote();
+    
     // 启动倒计时
     let countdown = 5;
     const countdownElement = document.getElementById('countdown');
@@ -111,6 +114,37 @@ function showSplashPage() {
             showLoginPage();
         }
     }, 1000);
+}
+
+/**
+ * 显示默认语录（用于启动页）
+ */
+function displayDefaultQuote() {
+    console.log('📚 正在显示默认语录...');
+    
+    // 检查是否加载了默认语录库
+    if (typeof getRandomDefaultQuote === 'function') {
+        const quote = getRandomDefaultQuote();
+        const quoteContentElement = document.getElementById('splashQuoteContent');
+        const quoteSourceElement = document.getElementById('splashQuoteSource');
+        
+        if (quoteContentElement && quoteSourceElement) {
+            quoteContentElement.textContent = quote.text;
+            quoteSourceElement.textContent = `—— ${quote.author}`;
+            console.log('✅ 已显示默认语录：', quote.author);
+        } else {
+            console.warn('⚠️ 找不到语录元素');
+        }
+    } else {
+        console.warn('⚠️ 默认语录库未加载，跳过显示语录');
+        // 显示默认文本
+        const quoteContentElement = document.getElementById('splashQuoteContent');
+        const quoteSourceElement = document.getElementById('splashQuoteSource');
+        if (quoteContentElement && quoteSourceElement) {
+            quoteContentElement.textContent = '欢迎使用 Bwhisper';
+            quoteSourceElement.textContent = '—— 你的阅读笔记助手';
+        }
+    }
 }
 
 /**
