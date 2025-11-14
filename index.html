@@ -6,44 +6,6 @@
     <title>Bwhisper</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- LeanCloud SDK - 使用多个CDN后备方案 -->
-    <script>
-        // 动态加载LeanCloud SDK，带有失败重试
-        (function() {
-            const cdnUrls = [
-                'https://unpkg.com/leancloud-storage@4.13.0/dist/av-min.js',
-                'https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.0/dist/av-min.js',
-                'https://cdn.bootcdn.net/ajax/libs/leancloud-storage/4.13.0/av-min.js'
-            ];
-            
-            let currentIndex = 0;
-            
-            function loadSDK() {
-                if (currentIndex >= cdnUrls.length) {
-                    console.error('❌ 所有CDN均加载失败，LeanCloud将不可用');
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = cdnUrls[currentIndex];
-                
-                script.onload = function() {
-                    console.log('✅ LeanCloud SDK加载成功，来源:', cdnUrls[currentIndex]);
-                };
-                
-                script.onerror = function() {
-                    console.warn('⚠️ CDN加载失败:', cdnUrls[currentIndex]);
-                    currentIndex++;
-                    loadSDK(); // 尝试下一个CDN
-                };
-                
-                document.head.appendChild(script);
-            }
-            
-            loadSDK();
-        })();
-    </script>
-    
     <style>
         /* 密码强度指示器样式 */
         .password-strength {
