@@ -139,7 +139,7 @@ function updatePlaybackHint(mode, count) {
     hintElement.textContent = hint;
 }
 
-// 更新播放UI（选中的单选按钮）
+// 更新播放UI（选中的单选按钮和.checked类）- 增强版
 function updatePlaybackUI() {
     if (!currentUser || currentBookIndex === null) return;
     
@@ -148,8 +148,20 @@ function updatePlaybackUI() {
     // 更新单选按钮状态
     const radios = document.getElementsByName('playbackMode');
     radios.forEach(radio => {
+        const option = radio.closest('.playback-mode-option');
         if (radio.value === settings.mode) {
             radio.checked = true;
+            // 为兼容性，添加 .checked 类（:has() 选择器不被所有浏览器支持）
+            if (option) {
+                option.classList.add('checked');
+            }
+            console.log('✅ 已选中模式:', settings.mode);
+        } else {
+            radio.checked = false;
+            // 移除其他选项的 .checked 类
+            if (option) {
+                option.classList.remove('checked');
+            }
         }
     });
     
@@ -311,6 +323,24 @@ function changePlaybackMode(newMode) {
             console.error('❌ 播放模式保存失败');
         }
         
+        // 更新单选按钮状态 - 添加/移除 .checked 类
+        const radios = document.getElementsByName('playbackMode');
+        radios.forEach(radio => {
+            const option = radio.closest('.playback-mode-option');
+            if (radio.value === newMode) {
+                radio.checked = true;
+                if (option) {
+                    option.classList.add('checked');
+                }
+            } else {
+                radio.checked = false;
+                if (option) {
+                    option.classList.remove('checked');
+                }
+            }
+        });
+        console.log('✅ 单选按钮状态已更新');
+        
         // 更新UI
         updatePlaybackHint(newMode, settings.selectedQuotes.length);
         updateSelectionSummary();
@@ -353,15 +383,26 @@ function initPlaybackController() {
         
         const settings = loadPlaybackSettings(user.username || user.id || user);
         
-        // 更新单选按钮状态
+        // 更新单选按钮状态 - 包含 .checked 类（兼容性）
         const radios = document.getElementsByName('playbackMode');
         if (radios.length > 0) {
             radios.forEach(radio => {
+                const option = radio.closest('.playback-mode-option');
                 if (radio.value === settings.mode) {
                     radio.checked = true;
+                    // 为兼容性，添加 .checked 类（:has() 选择器不被所有浏览器支持）
+                    if (option) {
+                        option.classList.add('checked');
+                    }
+                } else {
+                    radio.checked = false;
+                    // 移除其他选项的 .checked 类
+                    if (option) {
+                        option.classList.remove('checked');
+                    }
                 }
             });
-            console.log('✅ 播放模式单选按钮已更新');
+            console.log('✅ 播放模式单选按钮已更新》.checked类深接填充成功');
         } else {
             console.warn('⚠️ 播放模式单选按钮未找到');
         }

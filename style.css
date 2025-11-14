@@ -998,7 +998,9 @@ body {
     accent-color: #667eea;
 }
 
-.playback-mode-option:has(input:checked) {
+/* 替换 :has() 选择器为兴容性更好的 .checked 类 - 增强浏览器兵
+   需要与JavaScript配合使用来动态添加此类 */
+.playback-mode-option.checked {
     border-color: #667eea;
     background: white;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
