@@ -170,7 +170,16 @@ async function jsonbinGetData() {
         }
         
         const result = await response.json();
-        return result.record || { users: {}, metadata: { version: '1.0' } };
+        const data = result.record || { users: {}, metadata: { version: '1.0' } };
+        
+        // 🔍 调试：显示获取到的数据结构
+        console.log('📊 JSONbin 数据结构:', {
+            hasUsers: !!data.users,
+            userCount: data.users ? Object.keys(data.users).length : 0,
+            usernames: data.users ? Object.keys(data.users) : []
+        });
+        
+        return data;
     } catch (error) {
         console.error('❌ JSONbin 获取数据失败:', error);
         return { users: {}, metadata: { version: '1.0' } };
@@ -183,6 +192,14 @@ async function jsonbinGetData() {
 async function jsonbinSaveFullData(data) {
     try {
         console.log('💾 保存完整数据到 JSONbin');
+        
+        // 🔍 调试：显示将要保存的数据结构
+        console.log('📊 将要俟存的数据结构:', {
+            hasUsers: !!data.users,
+            userCount: data.users ? Object.keys(data.users).length : 0,
+            usernames: data.users ? Object.keys(data.users) : [],
+            fullData: data  // 显示完整数据
+        });
         
         const response = await fetch(`${JSONBIN_CONFIG.baseUrl}/b/${JSONBIN_CONFIG.binId}`, {
             method: 'PUT',
