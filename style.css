@@ -497,6 +497,42 @@ body {
     cursor: pointer;
 }
 
+.logout-btn:hover {
+    background: #ff7875;
+    opacity: 0.8;
+}
+
+.btn-backup,
+.btn-restore {
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-backup {
+    background: #1890ff;
+    margin-right: 5px;
+}
+
+.btn-backup:hover {
+    background: #40a9ff;
+    opacity: 0.8;
+}
+
+.btn-restore {
+    background: #52c41a;
+    margin-right: 5px;
+}
+
+.btn-restore:hover {
+    background: #73d13d;
+    opacity: 0.8;
+}
+
 .header h1 {
     text-align: center;
     margin: 10px 0;

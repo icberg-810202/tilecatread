@@ -198,7 +198,10 @@
         <header class="header">
             <div class="user-info">
                 <span id="currentUser">用户</span>
+                <button onclick="exportData()" class="btn-backup">💾 备份数据</button>
+                <button onclick="importData()" class="btn-restore">📥 恢复数据</button>
                 <button onclick="logout()" class="logout-btn">退出</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
             </div>
             <h1>📚 我的书库</h1>
             <div class="selection-info" id="selectionInfo">

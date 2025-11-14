@@ -1311,6 +1311,137 @@ function logout() {
     console.log('用户已退出登录');
 }
 
+/**
+ * 导出用户数据为JSON文件
+ */
+function exportData() {
+    try {
+        if (!currentUser) {
+            alert('请先登录');
+            return;
+        }
+        
+        console.log('💾 开始导出数据...');
+        
+        // 程程整个用户数据
+        const userData = userDatabase[currentUser];
+        if (!userData) {
+            alert('没有找到用户数据');
+            return;
+        }
+        
+        // 构造导出数据结构
+        const exportData = {
+            username: currentUser,
+            exportDate: new Date().toISOString(),
+            data: userData
+        };
+        
+        // 转换为JSON并美化
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        
+        // 下载文件
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Bwhisper_数据备份_${currentUser}_${new Date().getTime()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ 数据已导出');
+        alert(`数据已导出！
+
+包含: 
+- ${userData.books ? userData.books.length : 0} 本书籍
+- ${userData.books ? userData.books.reduce((sum, book) => sum + (book.quotes ? book.quotes.length : 0), 0) : 0} 条语录`);
+    } catch (error) {
+        console.error('❌ 数据导出失败:', error);
+        alert('数据导出失败: ' + error.message);
+    }
+}
+
+/**
+ * 从文件导入用户数据
+ */
+function importData() {
+    try {
+        if (!currentUser) {
+            alert('请先登录');
+            return;
+        }
+        
+        console.log('📥 开始恢复数据...');
+        
+        // 整删隐藏的文件输入框
+        const fileInput = document.getElementById('importFile');
+        if (!fileInput) {
+            console.error('❌ 找不到文件输入框');
+            alert('找不到文件输入框');
+            return;
+        }
+        
+        // 储整一个回调函数供整一次使用
+        fileInput.onchange = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // 验证数据结构
+                    if (!importedData.data || !importedData.username) {
+                        throw new Error('数据格式不正确');
+                    }
+                    
+                    // 确认偯恢
+                    const confirmed = confirm(
+                        `确认恢复 ${importedData.username} 的数据\u63a5\u4e0b来的数据将被暗揝: \n\n` +
+                        `- ${importedData.data.books ? importedData.data.books.length : 0} 本书籍\n` +
+                        `- ${importedData.data.books ? importedData.data.books.reduce((sum, book) => sum + (book.quotes ? book.quotes.length : 0), 0) : 0} 条语录\n\n` +
+                        `是否继续?`
+                    );
+                    
+                    if (!confirmed) {
+                        console.log('用户取消了恢复');
+                        return;
+                    }
+                    
+                    // 恢复数据
+                    userDatabase[currentUser] = importedData.data;
+                    saveUserDatabase();
+                    
+                    // 刷新UI
+                    renderBooksGrid();
+                    updateSelectionInfo();
+                    
+                    console.log('✅ 数据已恢复');
+                    alert('数据恢复成功！');
+                } catch (error) {
+                    console.error('❌ 恢复数据失败:', error);
+                    alert('恢复数据失败: ' + error.message);
+                }
+                
+                // 整理整一次使用后取消onchange
+                fileInput.onchange = null;
+                fileInput.value = '';
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        // 触发整一个整一次的整一次的整一次的整一次的整一次选择
+        fileInput.click();
+    } catch (error) {
+        console.error('❌ 整一个恢复失败:', error);
+        alert('恢复数据失败: ' + error.message);
+    }
+}
+
 // 返回书库函数
 function backToLibrary() {
     // 清空搜索框
