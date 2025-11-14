@@ -72,57 +72,43 @@ function initJSONbin() {
 }
 
 /**
- * 用户注册（JSONbin 版本）
+ * 用户注册（JSONbin 版本）- 修复版
  */
 async function jsonbinRegister(username, password) {
     try {
         console.log('📝 开始 JSONbin 注册，用户名:', username);
         
-        // 获取现有数据
-        const existingData = await jsonbinGetData();
+        const data = await jsonbinGetData();
         
-        // 检查用户是否已存在
-        if (existingData.users && existingData.users[username]) {
+        // 检查用户是否已存在（新数据结构）
+        if (data.users && data.users.find(u => u.username === username)) {
             throw new Error('用户名已存在');
         }
         
-        // 创建用户数据
-        const userData = {
+        // 创建新用户
+        const newUser = {
+            id: 'user-' + Date.now(),
             username: username,
-            password: hashPassword(password), // 使用哈希后的密码
-            createdAt: new Date().toISOString(),
-            books: []
+            password: hashPassword(password), // 加密密码
+            createdAt: new Date().toISOString()
         };
         
-        // 创建新的数据结构
-        const newData = {
-            users: existingData.users || {},
-            metadata: {
-                lastUpdated: new Date().toISOString(),
-                version: '1.0'
-            }
+        // 初始化数据结构
+        if (!data.users) data.users = [];
+        if (!data.books) data.books = [];
+        if (!data.quotes) data.quotes = [];
+        
+        data.users.push(newUser);
+        data.metadata = {
+            lastUpdated: new Date().toISOString(),
+            version: '1.0'
         };
         
-        // 添加新用户
-        newData.users[username] = userData;
-        
-        // 更新 JSONbin
-        const response = await fetch(`${JSONBIN_CONFIG.baseUrl}/b/${JSONBIN_CONFIG.binId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_CONFIG.masterKey
-            },
-            body: JSON.stringify(newData)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`JSONbin 更新失败: ${response.status}`);
-        }
+        await jsonbinSaveFullData(data);
         
         console.log('✅ JSONbin 用户注册成功:', username);
         return {
-            id: username,
+            id: newUser.id,
             username: username
         };
     } catch (error) {
@@ -132,17 +118,16 @@ async function jsonbinRegister(username, password) {
 }
 
 /**
- * 用户登录（JSONbin 版本）
+ * 用户登录（JSONbin 版本）- 修复版
  */
 async function jsonbinLogin(username, password) {
     try {
         console.log('📝 开始 JSONbin 登录，用户名:', username);
         
-        // 获取数据
         const data = await jsonbinGetData();
         
-        // 检查用户是否存在
-        const user = data.users && data.users[username];
+        // 在新数据结构中查找用户
+        const user = data.users && data.users.find(u => u.username === username);
         if (!user) {
             throw new Error('用户不存在');
         }
@@ -156,10 +141,10 @@ async function jsonbinLogin(username, password) {
         
         // 保存到 sessionStorage
         sessionStorage.setItem('username', username);
-        sessionStorage.setItem('userId', username);
+        sessionStorage.setItem('userId', user.id);
         
         return {
-            id: username,
+            id: user.id,
             username: username
         };
     } catch (error) {
@@ -182,14 +167,42 @@ async function jsonbinGetData() {
         
         if (!response.ok) {
             console.warn('⚠️ 获取 JSONbin 数据失败，返回空数据结构');
-            return { users: {}, metadata: { version: '1.0' } };
+            return { users: [], books: [], quotes: [], metadata: { version: '1.0' } };
         }
         
         const result = await response.json();
-        return result.record || { users: {}, metadata: { version: '1.0' } };
+        return result.record || { users: [], books: [], quotes: [], metadata: { version: '1.0' } };
     } catch (error) {
         console.error('❌ JSONbin 获取数据失败:', error);
-        return { users: {}, metadata: { version: '1.0' } };
+        return { users: [], books: [], quotes: [], metadata: { version: '1.0' } };
+    }
+}
+
+/**
+ * 保存完整数据到 JSONbin
+ */
+async function jsonbinSaveFullData(data) {
+    try {
+        console.log('💾 保存完整数据到 JSONbin');
+        
+        const response = await fetch(`${JSONBIN_CONFIG.baseUrl}/b/${JSONBIN_CONFIG.binId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_CONFIG.masterKey
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`JSONbin 保存失败: ${response.status}`);
+        }
+        
+        console.log('✅ 数据已保存到 JSONbin');
+        return response.json();
+    } catch (error) {
+        console.error('❌ JSONbin 保存失败:', error);
+        throw error;
     }
 }
 
