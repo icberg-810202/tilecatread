@@ -212,12 +212,17 @@ async function jsonbinSaveFullData(data) {
             body: JSON.stringify(data)
         });
         
+        console.log('📡 JSONbin 响应状态:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`JSONbin 保存失败: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ JSONbin API 错误响应:', errorText);
+            throw new Error(`JSONbin 保存失败: ${response.status} - ${errorText}`);
         }
         
-        console.log('✅ 数据已保存到 JSONbin');
-        return response.json();
+        const result = await response.json();
+        console.log('✅ 数据已保存到 JSONbin，响应:', result);
+        return result;
     } catch (error) {
         console.error('❌ JSONbin 保存失败:', error);
         throw error;
