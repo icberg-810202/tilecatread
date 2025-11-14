@@ -315,20 +315,32 @@
         window.addEventListener('DOMContentLoaded', function() {
             console.log('=== DOM加载完成，验证函数定义 ===');
             
-            // 验证关键函数
-            const criticalFunctions = ['showRegister', 'showPage', 'login', 'register', 'backToLogin'];
+            // 扩展验证列表，包含所有HTML中使用的函数
+            const criticalFunctions = [
+                'showRegister', 'showPage', 'login', 'register', 'backToLogin',
+                'showForgotPassword', 'sendVerifyCode', 'verifyCodeAndNext',
+                'resetPassword', 'backToStep1', 'logout', 'exportData', 'importData',
+                'performSearch', 'backToLibrary', 'showAddBookModal', 'addNewBook',
+                'closeAddBookModal', 'saveBookEdit', 'closeEditBookModal',
+                'backToMain', 'changePlaybackMode', 'showAddQuoteModal', 'addNewQuote',
+                'closeAddQuoteModal', 'saveQuoteEdit', 'closeEditQuoteModal'
+            ];
             let allDefined = true;
+            const missingFunctions = [];
             
             criticalFunctions.forEach(func => {
                 const isDefined = typeof window[func] === 'function';
                 console.log(`${isDefined ? '✅' : '❌'} ${func}: ${isDefined ? '已定义' : '未定义'}`);
-                if (!isDefined) allDefined = false;
+                if (!isDefined) {
+                    allDefined = false;
+                    missingFunctions.push(func);
+                }
             });
             
             if (allDefined) {
                 console.log('✅ 所有关键函数都已定义！');
             } else {
-                console.error('❌ 某些函数未定义，可能存在脚本加载问题！');
+                console.error('❌ 缺失的函数:', missingFunctions);
             }
         });
     </script>
