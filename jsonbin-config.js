@@ -80,6 +80,20 @@ async function jsonbinRegister(username, password) {
         
         const existingData = await jsonbinGetData();
         
+        // 🔧 数据迁移：将数组格式转换为对象格式
+        if (Array.isArray(existingData.users)) {
+            console.warn('⚠️ 检测到旧的数组格式数据，正在迁移为对象格式...');
+            const oldUsers = existingData.users;
+            existingData.users = {};
+            // 将数组中的用户转换为对象
+            oldUsers.forEach(user => {
+                if (user.username) {
+                    existingData.users[user.username] = user;
+                }
+            });
+            console.log('✅ 数据迁移完成，已转换', oldUsers.length, '个用户');
+        }
+        
         // 检查用户是否已存在（嵌套式结构）
         if (existingData.users && existingData.users[username]) {
             throw new Error('用户名已存在');
@@ -238,6 +252,19 @@ async function jsonbinSaveUserData(username, userData) {
         
         // 获取现有数据
         const existingData = await jsonbinGetData();
+        
+        // 🔧 数据迁移：将数组格式转换为对象格式
+        if (Array.isArray(existingData.users)) {
+            console.warn('⚠️ 检测到旧的数组格式数据，正在迁移为对象格式...');
+            const oldUsers = existingData.users;
+            existingData.users = {};
+            oldUsers.forEach(user => {
+                if (user.username) {
+                    existingData.users[user.username] = user;
+                }
+            });
+            console.log('✅ 数据迁移完成');
+        }
         
         // 更新用户数据
         if (!existingData.users) {
