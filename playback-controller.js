@@ -297,32 +297,57 @@ function changePlaybackMode(newMode) {
     }
 }
 
-// 初始化播放控制面板
+// 初始化播放控制面板 - 增强版
 function initPlaybackController() {
+    console.log('🔧 初始化播放控制器...');
+    
     try {
-        if (!currentUser) {
-            console.warn('⚠️ 用户未登录，无法初始化播放控制器');
-            return;
+        // 检查依赖
+        if (!checkDependencies()) {
+            console.warn('⚠️ 播放控制器初始化失败：依赖缺失');
+            return false;
         }
         
-        const settings = loadPlaybackSettings(currentUser);
+        // 获取当前用户
+        const user = getCurrentUserSafe();
+        if (!user) {
+            console.warn('⚠️ 播放控制器初始化失败：用户未登录');
+            return false;
+        }
         
-        // 更新单选按顁状态
+        // 书籍是可选的（包容会示书籍选择页面）
+        // if (currentBookIndex === null) {
+        //     console.warn('⚠️ 播放控制器初始化警告：未选择书籍');
+        //     // 不是致命错误，继续初始化
+        // }
+        
+        const settings = loadPlaybackSettings(user.username || user.id || user);
+        
+        // 更新单选按钮状态
         const radios = document.getElementsByName('playbackMode');
-        radios.forEach(radio => {
-            if (radio.value === settings.mode) {
-                radio.checked = true;
-            }
-        });
+        if (radios.length > 0) {
+            radios.forEach(radio => {
+                if (radio.value === settings.mode) {
+                    radio.checked = true;
+                }
+            });
+            console.log('✅ 播放模式单选按钮已更新');
+        } else {
+            console.warn('⚠️ 播放模式单选按钮未找到');
+        }
         
         // 更新提示信息
         updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
+        console.log('✅ 提示信息已更新');
         
         // 更新选择摘要
         updateSelectionSummary();
+        console.log('✅ 选择摘要已更新');
         
-        console.log('播放控制面板已初始化');
+        console.log('✅ 播放控制面板已初始化');
+        return true;
     } catch (error) {
         console.error('初始化播放控制器失败:', error);
+        return false;
     }
 }
