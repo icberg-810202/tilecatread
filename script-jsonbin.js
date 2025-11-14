@@ -10,31 +10,54 @@ let currentBookId = null;
 let currentBookIndex = null;  // 供 playback-controller.js 使用
 
 /**
- * 应用初始化
+ * 应用初始化 - 增强版（包含完整的依赖检查）
  */
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 初始化 TileCatRead 应用');
     
     try {
-        // 验证 JSONbin 配置
-        if (typeof validateJSONBinConfig !== 'function' || !validateJSONBinConfig()) {
-            alert('配置错误，请检查 JSONbin 配置');
-            return;
+        // 第一步：检查 JSONbin 配置
+        console.log('🔍 检查 JSONbin 配置...');
+        if (typeof validateJSONBinConfig !== 'function') {
+            throw new Error('validateJSONBinConfig 函数未找到，请磨硫 jsonbin-config.js 下是否正常加载');
         }
         
-        // 初始化数据管理器
-        await dataManager.initialize();
+        if (!validateJSONBinConfig()) {
+            throw new Error('JSONbin 配置验证失败，请检查 Bin ID 和 Master Key 是否正确');
+        }
+        console.log('✅ JSONbin 配置验证成功');
         
-        // 检查本地缓存
+        // 第二步：检查 dataManager 是否存在
+        console.log('🔍 检查 dataManager 依赖...');
+        if (typeof dataManager === 'undefined') {
+            throw new Error('dataManager 未定义，请确保 dataManager.js 在 script-jsonbin.js 之前加载');
+        }
+        
+        if (typeof dataManager.initialize !== 'function') {
+            throw new Error('dataManager.initialize 方法未找到，一些必要的方法不存在');
+        }
+        console.log('✅ dataManager 依赖检查成功');
+        
+        // 第三步：初始化数据管理器
+        console.log('🔧 初始化 dataManager...');
+        await dataManager.initialize();
+        console.log('✅ dataManager 初始化成功');
+        
+        // 第四步：检查本地缓存并恢复会话
+        console.log('🔍 检查本地缓存...');
         const cachedData = dataManager.getLocalCache();
         if (cachedData && cachedData.username) {
             console.log('✅ 发现本地缓存用户:', cachedData.username);
             currentUser = { id: cachedData.username, username: cachedData.username };
             // 这里可以添加自动登录逻辑
+        } else {
+            console.log('⚠️ 没有本地缓存');
         }
         
-        // 显示启动页
+        // 第五步：显示启动页
+        console.log('🚀 显示启动页');
         showSplashPage();
+        console.log('✅ 应用初始化完成');
     } catch (error) {
         console.error('❌ 应用初始化失败:', error);
         alert('应用初始化失败: ' + error.message);
