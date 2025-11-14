@@ -5,6 +5,43 @@
 console.log('📝 jsonbin-config.js 已加载');
 
 // ==========================================
+// 安全的 Storage 包装器（防止浏览器扩展干扰）
+// ==========================================
+
+const safeStorage = {
+    setItem: function(key, value) {
+        try {
+            sessionStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            console.warn('⚠️ sessionStorage 不可用，使用内存存储:', error.message);
+            // 使用内存作为后备
+            this._memoryStorage = this._memoryStorage || {};
+            this._memoryStorage[key] = value;
+            return false;
+        }
+    },
+    getItem: function(key) {
+        try {
+            return sessionStorage.getItem(key);
+        } catch (error) {
+            console.warn('⚠️ sessionStorage 不可用，使用内存读取:', error.message);
+            this._memoryStorage = this._memoryStorage || {};
+            return this._memoryStorage[key] || null;
+        }
+    },
+    removeItem: function(key) {
+        try {
+            sessionStorage.removeItem(key);
+        } catch (error) {
+            this._memoryStorage = this._memoryStorage || {};
+            delete this._memoryStorage[key];
+        }
+    },
+    _memoryStorage: {}
+};
+
+// ==========================================
 // 密码哈希和验证函数
 // ==========================================
 
@@ -152,9 +189,9 @@ async function jsonbinLogin(username, password) {
         
         console.log('✅ JSONbin 用户登录成功:', username);
         
-        // 保存到 sessionStorage
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('userId', username);
+        // 保存到 sessionStorage（使用安全包装器）
+        safeStorage.setItem('username', username);
+        safeStorage.setItem('userId', username);
         
         return {
             id: username,
@@ -343,9 +380,9 @@ async function jsonbinLogout() {
     try {
         console.log('📋 JSONbin 用户登出');
         
-        // 清除会话存储
-        sessionStorage.removeItem('username');
-        sessionStorage.removeItem('userId');
+        // 清除会话存储（使用安全包装器）
+        safeStorage.removeItem('username');
+        safeStorage.removeItem('userId');
         
         console.log('✅ JSONbin 用户登出成功');
     } catch (error) {

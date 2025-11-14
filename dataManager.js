@@ -5,6 +5,43 @@
 
 console.log('📦 dataManager.js 已加载');
 
+// ==========================================
+// 安全的 LocalStorage 包装器（防止浏览器扩展干扰）
+// ==========================================
+
+const safeLocalStorage = {
+    setItem: function(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            console.warn('⚠️ localStorage 不可用，使用内存存储:', error.message);
+            // 使用内存作为后备
+            this._memoryStorage = this._memoryStorage || {};
+            this._memoryStorage[key] = value;
+            return false;
+        }
+    },
+    getItem: function(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            console.warn('⚠️ localStorage 不可用，使用内存读取:', error.message);
+            this._memoryStorage = this._memoryStorage || {};
+            return this._memoryStorage[key] || null;
+        }
+    },
+    removeItem: function(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (error) {
+            this._memoryStorage = this._memoryStorage || {};
+            delete this._memoryStorage[key];
+        }
+    },
+    _memoryStorage: {}
+};
+
 class DataManager {
     constructor() {
         this.cacheKey = 'tilecatread_user_data';
@@ -441,7 +478,7 @@ class DataManager {
                 data: userData,
                 timestamp: Date.now()
             };
-            localStorage.setItem(this.cacheKey, JSON.stringify(cacheData));
+            safeLocalStorage.setItem(this.cacheKey, JSON.stringify(cacheData));
             console.log('💾 已保存本地缓存');
         } catch (error) {
             console.warn('⚠️ 本地缓存保存失败:', error);
@@ -453,7 +490,7 @@ class DataManager {
      */
     clearLocalCache() {
         try {
-            localStorage.removeItem(this.cacheKey);
+            safeLocalStorage.removeItem(this.cacheKey);
             console.log('🧹 本地缓存已清除');
         } catch (error) {
             console.warn('⚠️ 清除缓存失败:', error);
@@ -465,7 +502,7 @@ class DataManager {
      */
     getLocalCache() {
         try {
-            const cached = localStorage.getItem(this.cacheKey);
+            const cached = safeLocalStorage.getItem(this.cacheKey);
             return cached ? JSON.parse(cached) : null;
         } catch (error) {
             console.warn('⚠️ 读取缓存失败:', error);
