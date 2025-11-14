@@ -628,10 +628,12 @@ body {
     /* 移动端播放控制面板优化 */
     .playback-control-panel {
         padding: 15px;
+        margin: 0 -15px 20px -15px;
+        border-radius: 0;
     }
     
     .playback-modes {
-        gap: 10px;
+        gap: 8px;
     }
     
     .playback-mode-option {
@@ -643,6 +645,30 @@ body {
         width: 100%;
         margin-left: 40px;
         margin-top: 4px;
+        font-size: 11px;
+    }
+    
+    /* 增强移动端语录页面样式 */
+    .quotes-management {
+        padding: 15px;
+        max-width: 100%;
+    }
+    
+    .quote-item {
+        padding: 12px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .quote-content-wrapper {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 30px; /* 为复选框和序号留出空间 */
+    }
+    
+    .quote-actions {
+        margin-top: 10px;
+        justify-content: flex-end;
     }
 }
 
@@ -671,6 +697,22 @@ body {
     .add-book-card {
         width: 130px;
         height: 150px;
+    }
+}
+
+/* 超小屏幕优化（360px及以下）*/
+@media (max-width: 360px) {
+    .book-card, .add-book-card {
+        width: 120px;
+        height: 140px;
+    }
+    
+    .book-title {
+        font-size: 13px;
+    }
+    
+    .book-author {
+        font-size: 11px;
     }
 }
 
