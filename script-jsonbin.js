@@ -7,6 +7,7 @@ console.log('🚀 script-jsonbin.js 已加载');
 
 let currentUser = null;
 let currentBookId = null;
+let currentBookIndex = null;  // 供 playback-controller.js 使用
 
 /**
  * 应用初始化
@@ -399,6 +400,9 @@ function closeAddBookModal() {
 /**
  * 管理书籍语录
  */
+/**
+ * 管理语录 - 增强版（集成播放控制器初始化）
+ */
 async function manageQuotes(bookId) {
     currentBookId = bookId;
     const books = await dataManager.getUserBooks(currentUser.id);
@@ -409,10 +413,28 @@ async function manageQuotes(bookId) {
         if (titleElement) {
             titleElement.textContent = `《${book.name}》 - 语录管理`;
         }
+        
+        // 🎯 设置 currentBookIndex 供播放控制器使用
+        // playback-controller.js 需要这个全局变量
+        currentBookIndex = books.findIndex(b => b.id === bookId);
+        console.log('📖 设置 currentBookIndex:', currentBookIndex, '书籍ID:', bookId);
     }
     
     showPage('quotesPage');
     await renderQuotes();
+    
+    // 🎵 初始化播放控制器
+    if (typeof initPlaybackController === 'function') {
+        console.log('🎵 初始化播放控制器...');
+        const initialized = initPlaybackController();
+        if (initialized) {
+            console.log('✅ 播放控制器初始化成功');
+        } else {
+            console.warn('⚠️ 播放控制器初始化失败或跳过');
+        }
+    } else {
+        console.warn('⚠️ initPlaybackController 函数未找到');
+    }
 }
 
 /**
