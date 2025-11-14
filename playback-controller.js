@@ -270,19 +270,22 @@ function isQuoteSelected(bookIndex, quoteIndex) {
     }
 }
 
-// 切换播放模式
+// 切换播放模式 - 增强版
 function changePlaybackMode(newMode) {
+    console.log('=== 切换播放模式 ===');
+    
     try {
-        if (!currentUser) {
-            console.error('用户未登录');
+        const user = getCurrentUserSafe();
+        if (!user) {
+            console.error('❌ 用户未登录');
+            alert('请先登录');
             return;
         }
         
-        console.log('=== 切换播放模式 ===');
-        const settings = loadPlaybackSettings(currentUser);
+        const settings = loadPlaybackSettings(user.username || user.id || user);
         const oldMode = settings.mode;
+        
         console.log('旧模式:', oldMode, '新模式:', newMode);
-        console.log('切换前的索引:', settings.currentIndex);
         
         // 如果从其他模式切换到顺序播放，重置播放索引为0
         if (oldMode !== 'sequential' && newMode === 'sequential') {
@@ -299,30 +302,23 @@ function changePlaybackMode(newMode) {
             console.log('切换到单条重复模式，只保留第一条选中的语录');
         }
         
-        console.log('准备保存的设置:', JSON.stringify(settings));
-        
         // 保存设置
-        const saved = savePlaybackSettings(currentUser, settings);
+        const saved = savePlaybackSettings(user.username || user.id || user, settings);
         
-        // 验证是否保存成功
         if (saved) {
-            const verified = loadPlaybackSettings(currentUser);
-            console.log('✅ 保存后验证 - 模式:', verified.mode, '索引:', verified.currentIndex);
-            if (newMode === 'sequential' && verified.currentIndex !== 0) {
-                console.error('❌ 警告：索引未正确重置！实际值:', verified.currentIndex);
-            }
+            console.log('✅ 播放模式已保存');
+        } else {
+            console.error('❌ 播放模式保存失败');
         }
         
         // 更新UI
         updatePlaybackHint(newMode, settings.selectedQuotes.length);
         updateSelectionSummary();
         
-        // 重要：无论切换到什么模式，都重新渲染列表以更新复选框状态
-        // 从单条重复切换到其他模式时，需要启用所有复选框
-        // 切换到单条重复时，需要禁用其他复选框
+        // 重新渲染语录列表（如果函数存在）
         if (typeof renderQuotesList === 'function') {
             renderQuotesList();
-            console.log('已重新渲染语录列表，复选框状态已更新');
+            console.log('语录列表已重新渲染');
         }
         
         console.log(`播放模式已切换: ${oldMode} → ${newMode}`);
