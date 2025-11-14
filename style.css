@@ -998,12 +998,41 @@ body {
     accent-color: #667eea;
 }
 
+/* 禁用状态的单选按钮 */
+.playback-mode-option input[type="radio"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 /* 替换 :has() 选择器为兴容性更好的 .checked 类 - 增强浏览器兵
    需要与JavaScript配合使用来动态添加此类 */
 .playback-mode-option.checked {
     border-color: #667eea;
     background: white;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+/* 禁用状态的播放模式选项 */
+.playback-mode-option:disabled {
+    background: rgba(255, 255, 255, 0.7);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.playback-mode-option:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 选中状态的图标颜色增强 */
+.playback-mode-option input[type="radio"]:checked + .mode-icon {
+    color: #667eea;
+}
+
+/* 选中状态的标签颜色和字重增强 */
+.playback-mode-option input[type="radio"]:checked ~ .mode-label {
+    color: #667eea;
+    font-weight: 700;
 }
 
 .mode-icon {
