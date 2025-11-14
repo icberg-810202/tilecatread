@@ -191,6 +191,24 @@ body {
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
+/* 输入框错误状态 */
+.modern-input.error {
+    border-color: #ff4d4f;
+    background: #fff2f0;
+}
+
+.modern-input.error:focus {
+    border-color: #ff4d4f;
+    box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.1);
+}
+
+.error-message {
+    color: #ff4d4f;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
 .modern-input::placeholder {
     color: #999;
 }
@@ -311,6 +329,21 @@ body {
 
 .btn-modern-primary:active {
     transform: translateY(0);
+}
+
+/* 按钮禁用状态 */
+.btn-modern-primary:disabled,
+.btn-modern-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn-modern-primary:disabled:hover,
+.btn-modern-secondary:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 /* 现代化次要按钮 */
@@ -1300,6 +1333,31 @@ body {
     border-top: 4px solid #667eea;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.empty-state .icon {
+    font-size: 3em;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state .message {
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.empty-state .hint {
+    font-size: 14px;
+    opacity: 0.7;
+    line-height: 1.5;
 }
 
 /* 高DPI屏幕优化 */
