@@ -321,9 +321,66 @@ function login() {
         return;
     }
     
-    // 优先尝试LeanCloud登录，失败时回退到本地登录
-    console.log('尝试LeanCloud登录');
-    attemptLeanCloudLogin(username, password);
+    // 优先尝试JSONbin登录，失败时回退到本地登录
+    console.log('尝试JSONbin登录');
+    attemptJSONbinLogin(username, password);
+}
+
+// 尝试JSONbin登录
+async function attemptJSONbinLogin(username, password) {
+    try {
+        console.log('🔍 检查 jsonbinLogin 函数...');
+        console.log('typeof jsonbinLogin:', typeof jsonbinLogin);
+        
+        if (typeof jsonbinLogin !== 'function') {
+            throw new Error('JSONbin登录函数未定义');
+        }
+        
+        // 尝试使用JSONbin登录
+        const loginResult = await jsonbinLogin(username, password);
+        
+        console.log('✅ JSONbin登录成功:', username);
+        
+        // 保存用户信息
+        currentUser = username;
+        currentUserUid = loginResult.id;
+        currentUserToken = 'jsonbin_token_' + Date.now();
+        
+        // 从 JSONbin 加载用户数据
+        try {
+            const cloudUserData = await jsonbinLoadUserData(username);
+            if (cloudUserData) {
+                userDatabase[username] = cloudUserData;
+                // 同时保存到本地作为备份
+                saveUserLocalBackup(username, password, cloudUserData);
+            } else {
+                // 云端没有数据，尝试从本地加载
+                tryLoadUserDataFromLocal(username);
+            }
+        } catch (error) {
+            console.warn('从 JSONbin 加载数据失败，尝试本地加载:', error);
+            tryLoadUserDataFromLocal(username);
+        }
+        
+        // 保存会话信息
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('userToken', currentUserToken);
+        
+        // 更新UI
+        document.getElementById('currentUser').textContent = username;
+        showPage('mainPage');
+        
+        // 渲染书籍列表
+        renderBooksGrid();
+        updateSelectionInfo();
+        
+        alert('登录成功！已连接到JSONbin云服务。');
+    } catch (error) {
+        console.error('❌ JSONbin登录失败:', error);
+        console.log('回退到本地登录...');
+        // 降级到本地登录
+        localLogin(username, password);
+    }
 }
 
 // 尝试LeanCloud登录
@@ -801,9 +858,58 @@ function register() {
         return;
     }
     
-    // 优先尝试LeanCloud注册，失败时回退到本地注册
-    console.log('尝试LeanCloud注册，用户名:', username);
-    attemptLeanCloudRegister(username, password);
+    // 优先尝试 JSONbin 注册，失败时回退到本地注册
+    console.log('尝试 JSONbin 注册，用户名:', username);
+    attemptJSONbinRegister(username, password);
+}
+
+// 尝试 JSONbin 注册
+async function attemptJSONbinRegister(username, password) {
+    try {
+        console.log('🔍 检查 jsonbinRegister 函数...');
+        console.log('typeof jsonbinRegister:', typeof jsonbinRegister);
+        
+        if (typeof jsonbinRegister !== 'function') {
+            throw new Error('JSONbin注册函数未定义');
+        }
+        
+        // 尝试使用JSONbin注册
+        const registerResult = await jsonbinRegister(username, password);
+        
+        console.log('✅ JSONbin注册成功:', username);
+        
+        // 为新用户创建默认数据
+        const newUserData = {
+            username: username,
+            books: [],
+            createdAt: new Date().toISOString()
+        };
+        
+        // 保存到JSONbin
+        try {
+            await jsonbinSaveUserData(username, newUserData);
+            console.log('✅ 用户数据已保存到JSONbin');
+            
+            // 同时保存到本地作为备份
+            saveUserLocalBackup(username, password, newUserData);
+            
+            alert('注册成功！数据已同步到JSONbin云平台。');
+            backToLogin();
+        } catch (error) {
+            console.error('JSONbin数据保存失败，使用本地存储作为后备:', error);
+            // 失败时使用本地存储作为后备
+            saveUserLocalBackup(username, password, newUserData);
+            alert('注册成功，但无法同步云数据，数据已保存到本地。');
+            backToLogin();
+        }
+    } catch (error) {
+        console.error('❌ JSONbin注册失败:', error);
+        console.error('❌ 具体错误:', error.message || error);
+        console.log('回退到本地注册...');
+        
+        // 降级到本地注册
+        localRegister(username, password);
+    }
 }
 
 // 尝试LeanCloud注册
