@@ -178,6 +178,7 @@ async function jsonbinGetData() {
             userCount: data.users ? Object.keys(data.users).length : 0,
             usernames: data.users ? Object.keys(data.users) : []
         });
+        console.log('🔍 完整数据:', JSON.stringify(data, null, 2));
         
         return data;
     } catch (error) {
@@ -200,6 +201,7 @@ async function jsonbinSaveFullData(data) {
             usernames: data.users ? Object.keys(data.users) : [],
             fullData: data  // 显示完整数据
         });
+        console.log('🔍 将要保存的完整JSON:', JSON.stringify(data, null, 2));
         
         const response = await fetch(`${JSONBIN_CONFIG.baseUrl}/b/${JSONBIN_CONFIG.binId}`, {
             method: 'PUT',
