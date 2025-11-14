@@ -479,6 +479,8 @@ body {
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     flex-shrink: 0;
+    z-index: 100;
+    position: relative;
 }
 
 .user-info {
@@ -1221,11 +1223,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999; /* 提高z-index确保在最上层 */
+    backdrop-filter: blur(5px); /* 添加背景模糊效果 */
 }
 
 .modal-content {
@@ -1234,6 +1237,11 @@ body {
     border-radius: 8px;
     width: 300px;
     margin: 20px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
 }
 
 .modal-content input,
@@ -1257,6 +1265,41 @@ body {
     gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
+}
+
+/* 模态框滑动进入动画 */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 加载状态样式 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
 /* 高DPI屏幕优化 */
