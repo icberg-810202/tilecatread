@@ -13,7 +13,7 @@ class DataManager {
     }
 
     /**
-     * 初始化数据管理器
+     * 初始化数据管理器 - 增强版
      */
     async initialize() {
         console.log('🔧 初始化 DataManager...');
@@ -24,12 +24,47 @@ class DataManager {
                 throw new Error('JSONbin 配置验证失败');
             }
             
+            // 尝试恢复用户会话
+            await this.restoreSession();
+            
             this.initialized = true;
             console.log('✅ DataManager 初始化成功');
             return true;
         } catch (error) {
             console.error('❌ DataManager 初始化失败:', error);
             throw error;
+        }
+    }
+
+    /**
+     * 恢复用户会话
+     */
+    async restoreSession() {
+        console.log('🔍 尝试恢复用户会话...');
+        
+        try {
+            // 获取本地缓存
+            const cachedSession = this.getLocalCache();
+            
+            if (!cachedSession || !cachedSession.username) {
+                console.log('⚠️ 没有有效的会话缓存');
+                return false;
+            }
+            
+            console.log('📄 找到缓存会话，恢复用户:', cachedSession.username);
+            
+            // 设置当前用户
+            this.currentUser = {
+                username: cachedSession.username,
+                id: cachedSession.username // 北市结构源自用户名
+            };
+            
+            console.log('✅ 用户会话已恢复:', cachedSession.username);
+            return true;
+        } catch (error) {
+            console.warn('⚠️ 会话恢复失败:', error);
+            this.currentUser = null;
+            return false;
         }
     }
 
