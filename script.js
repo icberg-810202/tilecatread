@@ -48,7 +48,7 @@ const authorDatabase = [
 
 // 配置标志，用于快速切换数据存储模式
 const STORAGE_CONFIG = {
-    useLocalStorageOnly: false, // 设置为false表示启用LeanCloud云服务
+    useLocalStorageOnly: true, // 已改为true，仅使用本地存储和JSONbin
     debug: true // 启用调试日志
 };
 
