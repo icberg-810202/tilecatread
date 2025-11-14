@@ -188,10 +188,13 @@ async function jsonbinSaveUserData(username, userData) {
             existingData.users[username] = {};
         }
         
-        // 合并数据
+        // 合并数据：保留原有的 password 字段，更新其他字段
+        const preservedPassword = existingData.users[username].password;
         existingData.users[username] = {
             ...existingData.users[username],
             ...userData,
+            username: username, // 确保 username 始终存在
+            password: preservedPassword, // 保留原有密码
             lastUpdated: new Date().toISOString()
         };
         
