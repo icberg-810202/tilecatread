@@ -693,10 +693,53 @@ function performSearch() {
 }
 
 /**
- * 修改播放模式
+ * 切换播放模式 - 与 playback-controller.js 集成
  */
 function changePlaybackMode(mode) {
-    console.log('当前播放模式:', mode);
+    console.log('🎥 切换播放模式:', mode);
+    
+    try {
+        // 直接将事件处理委托给 playback-controller.js 中的同名函数
+        // 注意：需要在 HTML 的 script 标签加载顺序中确保 playback-controller.js 在 script-jsonbin.js 之前加载
+        
+        // 方式1：如果已重命名为其他函数（推荐）
+        if (typeof handlePlaybackModeChange === 'function') {
+            handlePlaybackModeChange(mode);
+            console.log('✅ 播放模式已交由 playback-controller 处理');
+            return;
+        }
+        
+        // 方式2：直接通过事件参数访问
+        const playbackModeFunctions = {
+            'sequential': () => {
+                console.log('📊 顺序播放模式已激活');
+                if (window.playbackController && typeof window.playbackController.setSequentialMode === 'function') {
+                    window.playbackController.setSequentialMode();
+                }
+            },
+            'random': () => {
+                console.log('🎲 随机播放模式已激活');
+                if (window.playbackController && typeof window.playbackController.setRandomMode === 'function') {
+                    window.playbackController.setRandomMode();
+                }
+            },
+            'single': () => {
+                console.log('🔂 单条重复模式已激活');
+                if (window.playbackController && typeof window.playbackController.setSingleMode === 'function') {
+                    window.playbackController.setSingleMode();
+                }
+            }
+        };
+        
+        if (playbackModeFunctions[mode]) {
+            playbackModeFunctions[mode]();
+        } else {
+            console.warn('⚠️ 未知的播放模式:', mode);
+        }
+        
+    } catch (error) {
+        console.error('切换播放模式失败:', error);
+    }
 }
 
 /**
