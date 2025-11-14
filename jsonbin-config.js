@@ -11,9 +11,38 @@ const JSONBIN_CONFIG = {
     baseUrl: 'https://api.jsonbin.io/v3'
 };
 
+/**
+ * 验证 JSONBin 配置
+ */
+function validateJSONBinConfig() {
+    console.log('🔍 验证 JSONBin 配置...');
+    
+    if (!JSONBIN_CONFIG.binId || JSONBIN_CONFIG.binId === 'YOUR_BIN_ID_HERE') {
+        console.error('❌ 请先配置 JSONBin Bin ID');
+        return false;
+    }
+    
+    if (!JSONBIN_CONFIG.masterKey || JSONBIN_CONFIG.masterKey === 'YOUR_MASTER_KEY_HERE') {
+        console.error('❌ 请先配置 JSONBin Master Key');
+        return false;
+    }
+    
+    console.log('✅ JSONBin 配置验证通过');
+    console.log('   Bin ID:', JSONBIN_CONFIG.binId.substring(0, 8) + '...');
+    return true;
+}
+
 // 初始化 JSONbin
 function initJSONbin() {
-    console.log('✅ JSONbin 已初始化');
+    console.log('🔧 开始初始化 JSONbin...');
+    
+    // 验证配置
+    if (!validateJSONBinConfig()) {
+        console.error('💥 JSONBin 配置验证失败，请检查配置');
+        return false;
+    }
+    
+    console.log('✅ JSONbin 已初始化成功');
     console.log('🔐 Bin ID:', JSONBIN_CONFIG.binId);
     return true;
 }
@@ -233,6 +262,17 @@ async function jsonbinLogout() {
         console.error('❌ JSONbin 登出失败:', error);
         throw error;
     }
+}
+
+// 验证配置
+// 此代码会在脚本加载时执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        validateJSONBinConfig();
+    });
+} else {
+    // DOM 已经加载
+    validateJSONBinConfig();
 }
 
 console.log('✅ jsonbin-config.js 配置完成');
