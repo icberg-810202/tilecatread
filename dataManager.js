@@ -79,18 +79,11 @@ class DataManager {
                 throw new Error('用户名和密码不能为空');
             }
 
-            // 调用 JSONbin API
+            // 调用 JSONbin API 注册（已包含保存完整用户数据）
             const result = await jsonbinRegister(username, password);
             
-            // 创建初始用户数据
-            const userData = {
-                username: username,
-                books: [],
-                createdAt: new Date().toISOString()
-            };
-
-            // 保存用户数据到 JSONbin
-            await jsonbinSaveUserData(username, userData);
+            // 加载刚注册的用户数据（从 JSONbin 读取）
+            const userData = await jsonbinLoadUserData(username);
             
             // 保存到本地缓存
             this.saveLocalCache(username, userData);
