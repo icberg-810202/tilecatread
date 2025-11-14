@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bwhisper 诊断页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #1890ff; }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+        }
+        .success { background: #f6ffed; border: 1px solid #b7eb8f; }
+        .error { background: #fff2f0; border: 1px solid #ffccc7; }
+        .info { background: #e6f7ff; border: 1px solid #91d5ff; }
+        pre { 
+            background: #f5f5f5; 
+            padding: 10px; 
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Bwhisper 诊断页面</h1>
+    <p>此页面用于检查应用加载状态</p>
+    
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            output.appendChild(div);
+        }
+        
+        log('✅ HTML 页面已加载', 'success');
+        log(`📅 当前时间: ${new Date().toLocaleString()}`, 'info');
+        log(`🌐 当前 URL: ${window.location.href}`, 'info');
+        log(`📱 用户代理: ${navigator.userAgent}`, 'info');
+        
+        // 测试基本功能
+        try {
+            localStorage.setItem('test', 'ok');
+            localStorage.removeItem('test');
+            log('✅ localStorage 可用', 'success');
+        } catch (e) {
+            log('❌ localStorage 不可用: ' + e.message, 'error');
+        }
+        
+        try {
+            sessionStorage.setItem('test', 'ok');
+            sessionStorage.removeItem('test');
+            log('✅ sessionStorage 可用', 'success');
+        } catch (e) {
+            log('❌ sessionStorage 不可用: ' + e.message, 'error');
+        }
+        
+        // 检查主页面
+        log('<br><h3>正在检查主应用...</h3>', 'info');
+        
+        fetch('index.html')
+            .then(response => {
+                if (response.ok) {
+                    log('✅ index.html 可访问 (HTTP ' + response.status + ')', 'success');
+                    return response.text();
+                } else {
+                    log('❌ index.html 访问失败 (HTTP ' + response.status + ')', 'error');
+                }
+            })
+            .then(html => {
+                if (html) {
+                    log(`✅ index.html 大小: ${(html.length / 1024).toFixed(2)} KB`, 'success');
+                }
+            })
+            .catch(e => {
+                log('❌ 无法加载 index.html: ' + e.message, 'error');
+            });
+        
+        // 检查脚本文件
+        const scripts = [
+            'default-quotes.js',
+            'jsonbin-config.js',
+            'dataManager.js',
+            'script-jsonbin.js',
+            'playback-controller.js'
+        ];
+        
+        scripts.forEach(script => {
+            fetch(script)
+                .then(response => {
+                    if (response.ok) {
+                        log(`✅ ${script} 可访问`, 'success');
+                    } else {
+                        log(`❌ ${script} 访问失败 (HTTP ${response.status})`, 'error');
+                    }
+                })
+                .catch(e => {
+                    log(`❌ ${script} 加载失败: ${e.message}`, 'error');
+                });
+        });
+        
+        // 检查样式文件
+        fetch('style.css')
+            .then(response => {
+                if (response.ok) {
+                    log('✅ style.css 可访问', 'success');
+                } else {
+                    log('❌ style.css 访问失败', 'error');
+                }
+            })
+            .catch(e => {
+                log('❌ style.css 加载失败: ' + e.message, 'error');
+            });
+        
+        log('<br><a href="index.html" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#1890ff;color:white;text-decoration:none;border-radius:5px;">🚀 打开主应用</a>', 'info');
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // 第一步：检查 JSONbin 配置
         console.log('🔍 检查 JSONbin 配置...');
         if (typeof validateJSONBinConfig !== 'function') {
-            throw new Error('validateJSONBinConfig 函数未找到，请磨硫 jsonbin-config.js 下是否正常加载');
+            throw new Error('validateJSONBinConfig 函数未找到，请检查 jsonbin-config.js 是否正常加载');
         }
         
         if (!validateJSONBinConfig()) {
