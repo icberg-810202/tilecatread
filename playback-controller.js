@@ -1,6 +1,56 @@
 // 播放模式控制器
 // 此文件处理语录播放模式相关的所有功能
 
+// ==========================================
+// 依赖检查和安全访问函数
+// ==========================================
+
+/**
+ * 检查依赖是否可用
+ */
+function checkDependencies() {
+    const required = ['dataManager', 'currentUser'];
+    const missing = required.filter(item => typeof window[item] === 'undefined');
+    
+    if (missing.length > 0) {
+        console.warn('⚠️ 播放控制器依赖缺失:', missing);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 安全地获取当前用户
+ */
+function getCurrentUserSafe() {
+    if (typeof dataManager !== 'undefined' && dataManager.currentUser) {
+        return dataManager.currentUser.username || currentUser;
+    }
+    return currentUser;
+}
+
+/**
+ * 安全地获取用户书籍
+ */
+async function getUserBooksSafe(username) {
+    try {
+        if (typeof dataManager !== 'undefined' && dataManager.getUserBooks) {
+            return await dataManager.getUserBooks(username);
+        }
+        
+        // 回退到原来的逻辑
+        if (typeof userDatabase !== 'undefined' && userDatabase[username]) {
+            return userDatabase[username].books || [];
+        }
+        
+        return [];
+    } catch (error) {
+        console.error('获取用户书籍失败:', error);
+        return [];
+    }
+}
+
+// ==========================================
 // 加载用户的播放设置
 function loadPlaybackSettings(username) {
     try {
@@ -89,159 +139,190 @@ function updatePlaybackUI() {
 // 更新选择摘要信息
 function updateSelectionSummary() {
     const summaryElement = document.getElementById('selectionSummary');
-    if (!summaryElement || !currentUser || currentBookIndex === null) return;
+    if (!summaryElement || !currentUser) return;
     
-    const settings = loadPlaybackSettings(currentUser);
-    const selectedCount = settings.selectedQuotes.filter(q => q.bookIndex === currentBookIndex).length;
-    const book = userDatabase[currentUser].books[currentBookIndex];
-    const totalQuotes = book.quotes ? book.quotes.length : 0;
-    
-    let modeText = '';
-    switch (settings.mode) {
-        case 'sequential':
-            modeText = '顺序播放';
-            break;
-        case 'random':
-            modeText = '随机播放';
-            break;
-        case 'single':
-            modeText = '单条重复';
-            break;
+    try {
+        const settings = loadPlaybackSettings(currentUser);
+        const selectedCount = settings.selectedQuotes.length;
+        
+        // 安全地获取书籍数量
+        let totalQuotes = 0;
+        if (typeof userDatabase !== 'undefined' && userDatabase[currentUser] && userDatabase[currentUser].books) {
+            // 回退到原来的逻辑
+            totalQuotes = userDatabase[currentUser].books.reduce((sum, book) => sum + (book.quotes ? book.quotes.length : 0), 0);
+        }
+        
+        let modeText = '';
+        switch (settings.mode) {
+            case 'sequential':
+                modeText = '顺序播放';
+                break;
+            case 'random':
+                modeText = '随机播放';
+                break;
+            case 'single':
+                modeText = '单条重复';
+                break;
+        }
+        
+        summaryElement.innerHTML = `
+            当前模式：<strong>${modeText}</strong> | 
+            已选择：<strong>${selectedCount}</strong>/${totalQuotes}条 | 
+            全部书籍永久保存
+        `;
+    } catch (error) {
+        console.error('更新选择摘要信息失败:', error);
     }
-    
-    summaryElement.innerHTML = `
-        当前模式：<strong>${modeText}</strong> | 
-        本书已选：<strong>${selectedCount}</strong>/${totalQuotes}条 | 
-        全部已选：<strong>${settings.selectedQuotes.length}</strong>条
-    `;
 }
 
 // 切换语录选中状态
 function toggleQuoteSelection(bookIndex, quoteIndex) {
-    if (!currentUser) {
-        console.error('用户未登录');
-        return;
-    }
-    
-    const settings = loadPlaybackSettings(currentUser);
-    const quoteId = { bookIndex, quoteIndex };
-    
-    // 查找是否已选中
-    const existingIndex = settings.selectedQuotes.findIndex(
-        q => q.bookIndex === bookIndex && q.quoteIndex === quoteIndex
-    );
-    
-    if (existingIndex >= 0) {
-        // 已选中，取消选中
-        settings.selectedQuotes.splice(existingIndex, 1);
-        console.log('取消选中语录:', bookIndex, quoteIndex);
-    } else {
-        // 未选中，添加选中
-        
-        // 如果是单条重复模式，清空其他选中的语录
-        if (settings.mode === 'single') {
-            settings.selectedQuotes = [quoteId];
-            console.log('单条重复模式：清空其他选中，仅选中当前语录:', bookIndex, quoteIndex);
-        } else {
-            settings.selectedQuotes.push(quoteId);
-            console.log('选中语录:', bookIndex, quoteIndex);
+    try {
+        if (!currentUser) {
+            console.error('用户未登录');
+            return;
         }
+        
+        const settings = loadPlaybackSettings(currentUser);
+        const quoteId = { bookIndex, quoteIndex };
+        
+        // 查找是否已选中
+        const existingIndex = settings.selectedQuotes.findIndex(
+            q => q.bookIndex === bookIndex && q.quoteIndex === quoteIndex
+        );
+        
+        if (existingIndex >= 0) {
+            // 已选中，取消选中
+            settings.selectedQuotes.splice(existingIndex, 1);
+            console.log('取消选中语录:', bookIndex, quoteIndex);
+        } else {
+            // 未选中，添加选中
+            
+            // 如果是单条重复模式，清空其他选中的语录
+            if (settings.mode === 'single') {
+                settings.selectedQuotes = [quoteId];
+                console.log('单条重复模式：清空其他选中，仅选中当前语录:', bookIndex, quoteIndex);
+            } else {
+                settings.selectedQuotes.push(quoteId);
+                console.log('选中语录:', bookIndex, quoteIndex);
+            }
+        }
+        
+        // 保存设置
+        savePlaybackSettings(currentUser, settings);
+        
+        // 更新UI
+        if (typeof renderQuotesList === 'function') {
+            renderQuotesList();
+        }
+        updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
+    } catch (error) {
+        console.error('切换语录选中失败:', error);
     }
-    
-    // 保存设置
-    savePlaybackSettings(currentUser, settings);
-    
-    // 更新UI
-    renderQuotesList();
-    updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
 }
 
 // 检查语录是否被选中
 function isQuoteSelected(bookIndex, quoteIndex) {
-    if (!currentUser) return false;
-    
-    const settings = loadPlaybackSettings(currentUser);
-    return settings.selectedQuotes.some(
-        q => q.bookIndex === bookIndex && q.quoteIndex === quoteIndex
-    );
+    try {
+        if (!currentUser) return false;
+        
+        const settings = loadPlaybackSettings(currentUser);
+        return settings.selectedQuotes.some(
+            q => q.bookIndex === bookIndex && q.quoteIndex === quoteIndex
+        );
+    } catch (error) {
+        console.error('检查选中状态失败:', error);
+        return false;
+    }
 }
 
 // 切换播放模式
 function changePlaybackMode(newMode) {
-    if (!currentUser) {
-        console.error('用户未登录');
-        return;
-    }
-    
-    console.log('=== 切换播放模式 ===');
-    const settings = loadPlaybackSettings(currentUser);
-    const oldMode = settings.mode;
-    console.log('旧模式:', oldMode, '新模式:', newMode);
-    console.log('切换前的索引:', settings.currentIndex);
-    
-    // 如果从其他模式切换到顺序播放，重置播放索引为0
-    if (oldMode !== 'sequential' && newMode === 'sequential') {
-        settings.currentIndex = 0;
-        console.log('✅ 切换到顺序播放模式，播放索引已重置为0');
-    }
-    
-    // 更新播放模式
-    settings.mode = newMode;
-    
-    // 如果是单条重复模式且选中了多条语录，只保留第一条
-    if (newMode === 'single' && settings.selectedQuotes.length > 1) {
-        settings.selectedQuotes = [settings.selectedQuotes[0]];
-        console.log('切换到单条重复模式，只保留第一条选中的语录');
-    }
-    
-    console.log('准备保存的设置:', JSON.stringify(settings));
-    
-    // 保存设置
-    const saved = savePlaybackSettings(currentUser, settings);
-    
-    // 验证是否保存成功
-    if (saved) {
-        const verified = loadPlaybackSettings(currentUser);
-        console.log('✅ 保存后验证 - 模式:', verified.mode, '索引:', verified.currentIndex);
-        if (newMode === 'sequential' && verified.currentIndex !== 0) {
-            console.error('❌ 警告：索引未正确重置！实际值:', verified.currentIndex);
+    try {
+        if (!currentUser) {
+            console.error('用户未登录');
+            return;
         }
+        
+        console.log('=== 切换播放模式 ===');
+        const settings = loadPlaybackSettings(currentUser);
+        const oldMode = settings.mode;
+        console.log('旧模式:', oldMode, '新模式:', newMode);
+        console.log('切换前的索引:', settings.currentIndex);
+        
+        // 如果从其他模式切换到顺序播放，重置播放索引为0
+        if (oldMode !== 'sequential' && newMode === 'sequential') {
+            settings.currentIndex = 0;
+            console.log('✅ 切换到顺序播放模式，播放索引已重置为0');
+        }
+        
+        // 更新播放模式
+        settings.mode = newMode;
+        
+        // 如果是单条重复模式且选中了多条语录，只保留第一条
+        if (newMode === 'single' && settings.selectedQuotes.length > 1) {
+            settings.selectedQuotes = [settings.selectedQuotes[0]];
+            console.log('切换到单条重复模式，只保留第一条选中的语录');
+        }
+        
+        console.log('准备保存的设置:', JSON.stringify(settings));
+        
+        // 保存设置
+        const saved = savePlaybackSettings(currentUser, settings);
+        
+        // 验证是否保存成功
+        if (saved) {
+            const verified = loadPlaybackSettings(currentUser);
+            console.log('✅ 保存后验证 - 模式:', verified.mode, '索引:', verified.currentIndex);
+            if (newMode === 'sequential' && verified.currentIndex !== 0) {
+                console.error('❌ 警告：索引未正确重置！实际值:', verified.currentIndex);
+            }
+        }
+        
+        // 更新UI
+        updatePlaybackHint(newMode, settings.selectedQuotes.length);
+        updateSelectionSummary();
+        
+        // 重要：无论切换到什么模式，都重新渲染列表以更新复选框状态
+        // 从单条重复切换到其他模式时，需要启用所有复选框
+        // 切换到单条重复时，需要禁用其他复选框
+        if (typeof renderQuotesList === 'function') {
+            renderQuotesList();
+            console.log('已重新渲染语录列表，复选框状态已更新');
+        }
+        
+        console.log(`播放模式已切换: ${oldMode} → ${newMode}`);
+    } catch (error) {
+        console.error('切换播放模式失败:', error);
     }
-    
-    // 更新UI
-    updatePlaybackHint(newMode, settings.selectedQuotes.length);
-    updateSelectionSummary();
-    
-    // 重要：无论切换到什么模式，都重新渲染列表以更新复选框状态
-    // 从单条重复切换到其他模式时，需要启用所有复选框
-    // 切换到单条重复时，需要禁用其他复选框
-    if (typeof renderQuotesList === 'function') {
-        renderQuotesList();
-        console.log('已重新渲染语录列表，复选框状态已更新');
-    }
-    
-    console.log(`播放模式已切换: ${oldMode} → ${newMode}`);
 }
 
 // 初始化播放控制面板
 function initPlaybackController() {
-    if (!currentUser || currentBookIndex === null) return;
-    
-    const settings = loadPlaybackSettings(currentUser);
-    
-    // 更新单选按钮状态
-    const radios = document.getElementsByName('playbackMode');
-    radios.forEach(radio => {
-        if (radio.value === settings.mode) {
-            radio.checked = true;
+    try {
+        if (!currentUser) {
+            console.warn('⚠️ 用户未登录，无法初始化播放控制器');
+            return;
         }
-    });
-    
-    // 更新提示信息
-    updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
-    
-    // 更新选择摘要
-    updateSelectionSummary();
-    
-    console.log('播放控制面板已初始化');
+        
+        const settings = loadPlaybackSettings(currentUser);
+        
+        // 更新单选按顁状态
+        const radios = document.getElementsByName('playbackMode');
+        radios.forEach(radio => {
+            if (radio.value === settings.mode) {
+                radio.checked = true;
+            }
+        });
+        
+        // 更新提示信息
+        updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
+        
+        // 更新选择摘要
+        updateSelectionSummary();
+        
+        console.log('播放控制面板已初始化');
+    } catch (error) {
+        console.error('初始化播放控制器失败:', error);
+    }
 }
