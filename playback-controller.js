@@ -50,6 +50,27 @@ async function getUserBooksSafe(username) {
     }
 }
 
+/**
+ * 获取当前书籍
+ */
+function getCurrentBook() {
+    try {
+        const user = getCurrentUserSafe();
+        if (!user || currentBookIndex === null) return null;
+        
+        // 尝试从 userDatabase 获取
+        if (typeof userDatabase !== 'undefined' && userDatabase[user] && userDatabase[user].books) {
+            return userDatabase[user].books[currentBookIndex];
+        }
+        
+        // 如果 userDatabase 不可用，稍后可以优化处理
+        return null;
+    } catch (error) {
+        console.error('获取当前书籍失败:', error);
+        return null;
+    }
+}
+
 // ==========================================
 // 加载用户的播放设置
 function loadPlaybackSettings(username) {
@@ -136,21 +157,31 @@ function updatePlaybackUI() {
     updateSelectionSummary();
 }
 
-// 更新选择摘要信息
+// 更新选择摘要信息 - 修复版
 function updateSelectionSummary() {
     const summaryElement = document.getElementById('selectionSummary');
-    if (!summaryElement || !currentUser) return;
+    if (!summaryElement) {
+        console.warn('⚠️ 选择摘要元素未找到');
+        return;
+    }
     
     try {
-        const settings = loadPlaybackSettings(currentUser);
-        const selectedCount = settings.selectedQuotes.length;
-        
-        // 安全地获取书籍数量
-        let totalQuotes = 0;
-        if (typeof userDatabase !== 'undefined' && userDatabase[currentUser] && userDatabase[currentUser].books) {
-            // 回退到原来的逻辑
-            totalQuotes = userDatabase[currentUser].books.reduce((sum, book) => sum + (book.quotes ? book.quotes.length : 0), 0);
+        const user = getCurrentUserSafe();
+        if (!user || currentBookIndex === null) {
+            summaryElement.innerHTML = '请先选择书籍';
+            return;
         }
+        
+        const settings = loadPlaybackSettings(user.username || user.id || user);
+        const book = getCurrentBook();
+        
+        if (!book) {
+            summaryElement.innerHTML = '书籍数据加载失败';
+            return;
+        }
+        
+        const selectedCount = settings.selectedQuotes.filter(q => q.bookIndex === currentBookIndex).length;
+        const totalQuotes = book.quotes ? book.quotes.length : 0;
         
         let modeText = '';
         switch (settings.mode) {
@@ -163,15 +194,18 @@ function updateSelectionSummary() {
             case 'single':
                 modeText = '单条重复';
                 break;
+            default:
+                modeText = '未知模式';
         }
         
         summaryElement.innerHTML = `
             当前模式：<strong>${modeText}</strong> | 
-            已选择：<strong>${selectedCount}</strong>/${totalQuotes}条 | 
-            全部书籍永久保存
+            本书已选：<strong>${selectedCount}</strong>/${totalQuotes}条 | 
+            全部已选：<strong>${settings.selectedQuotes.length}</strong>条
         `;
     } catch (error) {
         console.error('更新选择摘要信息失败:', error);
+        summaryElement.innerHTML = '数据处理错误';
     }
 }
 
