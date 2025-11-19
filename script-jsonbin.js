@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('🚀 显示启动页');
         showSplashPage();
         console.log('✅ 应用初始化完成');
+        
+        // 第六步：绑定登录页 Enter 键事件
+        setupLoginEnterKey();
     } catch (error) {
         console.error('❌ 应用初始化失败:', error);
         alert('应用初始化失败: ' + error.message);
@@ -89,14 +92,14 @@ function showPage(pageId) {
 /**
  * 显示启动页
  */
-function showSplashPage() {
+async function showSplashPage() {
     showPage('splashPage');
     
-    // 📚 显示默认语录
-    displayDefaultQuote();
+    // 📚 显示语录（智能选择）
+    await displaySplashQuote();
     
-    // 启动倒计时
-    let countdown = 5;
+    // 启动倒计时（10秒）
+    let countdown = 10;
     const countdownElement = document.getElementById('countdown');
     
     if (countdownElement) {
@@ -114,6 +117,81 @@ function showSplashPage() {
             showLoginPage();
         }
     }, 1000);
+}
+
+/**
+ * 显示启动页语录（智能选择：用户勾选的语录 or 默认语录）
+ */
+async function displaySplashQuote() {
+    console.log('📚 正在显示启动页语录...');
+    
+    const quoteContentElement = document.getElementById('splashQuoteContent');
+    const quoteSourceElement = document.getElementById('splashQuoteSource');
+    
+    if (!quoteContentElement || !quoteSourceElement) {
+        console.warn('⚠️ 找不到语录元素');
+        return;
+    }
+    
+    try {
+        // 尝试获取用户信息
+        const lastUser = localStorage.getItem('lastLoggedInUser');
+        const deviceId = getDeviceId ? getDeviceId() : null;
+        
+        console.log('👤 上次登录的用户:', lastUser);
+        console.log('📱 设备ID:', deviceId);
+        
+        let userQuote = null;
+        
+        // 如果有用户和设备ID，尝试获取用户勾选的语录
+        if (lastUser && deviceId) {
+            // 等待 getSplashQuote 函数加载（最多等待2秒）
+            let attempts = 0;
+            while (typeof getSplashQuote !== 'function' && attempts < 20) {
+                console.log('⏳ 等待 playback-controller.js 加载...');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (typeof getSplashQuote === 'function') {
+                try {
+                    console.log('✅ getSplashQuote 函数已加载，开始获取用户语录');
+                    userQuote = await getSplashQuote(lastUser, deviceId);
+                } catch (error) {
+                    console.error('⚠️ 获取用户语录失败:', error);
+                }
+            } else {
+                console.warn('⚠️ getSplashQuote 函数未加载，跳过用户语录获取');
+            }
+        }
+        
+        // 如果获取到用户语录，显示用户语录
+        if (userQuote) {
+            console.log('✅ 显示用户勾选的语录');
+            quoteContentElement.textContent = userQuote.text;
+            
+            let sourceText = `—— 《${userQuote.bookName}》`;
+            if (userQuote.author) {
+                sourceText += ` ${userQuote.author}`;
+            }
+            if (userQuote.page) {
+                sourceText += ` P${userQuote.page}`;
+            }
+            quoteSourceElement.textContent = sourceText;
+            
+            console.log('✅ 已显示用户语录:', userQuote.bookName);
+            return;
+        }
+        
+        // 否则显示默认语录
+        console.log('📚 显示默认语录...');
+        displayDefaultQuote();
+        
+    } catch (error) {
+        console.error('⚠️ 显示语录失败:', error);
+        // 失败时显示默认语录
+        displayDefaultQuote();
+    }
 }
 
 /**
@@ -172,6 +250,11 @@ function showMainPage() {
         const userElement = document.getElementById('currentUser');
         if (userElement) {
             userElement.textContent = currentUser.username;
+        }
+        
+        // 初始化播放控制器（异步）
+        if (typeof initPlaybackController === 'function') {
+            initPlaybackController();
         }
     }
 }
@@ -249,6 +332,11 @@ async function login() {
         
         if (result.success) {
             currentUser = result.user;
+            
+            // 保存最后登录的用户名，用于启动页显示用户语录
+            localStorage.setItem('lastLoggedInUser', currentUser.username || currentUser.id);
+            console.log('✅ 已保存最后登录用户:', currentUser.username || currentUser.id);
+            
             alert('登录成功！');
             await loadUserData();
             showMainPage();
@@ -335,22 +423,48 @@ async function loadUserData() {
 /**
  * 渲染书籍列表
  */
-function renderBooks(books) {
+async function renderBooks(books) {
     const booksGrid = document.getElementById('booksGrid');
     if (!booksGrid) return;
     
     if (!books || books.length === 0) {
-        booksGrid.innerHTML = '<div class="empty-state">暂无书籍，点击"添加新书"开始记录</div>';
+        booksGrid.innerHTML = '<div class="empty-state">暂无书籍，点击“添加新书”开始记录</div>';
         return;
     }
 
+    // 获取当前用户的勾选书籍列表
+    const selectedBooks = await getSelectedBooks();
+    
+    // 获取播放设置，检查是否为单条重复模式
+    const username = currentUser ? (currentUser.username || currentUser.id || currentUser) : null;
+    console.log('👤 当前用户:', username);
+    
+    const settings = username && typeof loadPlaybackSettings === 'function' ? loadPlaybackSettings(username) : { mode: 'sequential', selectedQuotes: [] };
+    console.log('🎵 播放设置:', settings);
+    
+    const isSingleMode = settings.mode === 'single';
+    // 单条重复模式下，禁用所有书籍勾选框
+    const disableAllBooks = isSingleMode;
+    console.log(`📚 是否禁用书籍勾选框: ${disableAllBooks} (模式: ${settings.mode})`);
+    
     booksGrid.innerHTML = '';
     books.forEach((book, index) => {
         const quoteCount = book.quotes ? book.quotes.length : 0;
+        const isSelected = selectedBooks.includes(book.id);
         
         const bookCard = document.createElement('div');
         bookCard.className = 'book-card';
+        bookCard.style.cursor = 'pointer';
+        // 点击书籍卡片进入语录管理
+        bookCard.onclick = () => manageQuotes(book.id);
         bookCard.innerHTML = `
+            <div class="book-checkbox" onclick="event.stopPropagation()">
+                <input type="checkbox" 
+                       id="book-${book.id}" 
+                       ${isSelected ? 'checked' : ''} 
+                       ${disableAllBooks ? 'disabled' : ''}
+                       onchange="toggleBookSelection('${book.id}')">
+            </div>
             <div class="book-icon">📚</div>
             <div class="book-info">
                 <h3>${book.name}</h3>
@@ -358,9 +472,8 @@ function renderBooks(books) {
                 <div class="book-stats">${quoteCount} 条语录</div>
             </div>
             <div class="book-actions">
-                <button onclick="manageQuotes('${book.id}')" class="btn-primary">管理语录</button>
-                <button onclick="editBook('${book.id}')" class="btn-secondary">编辑</button>
-                <button onclick="deleteBook('${book.id}')" class="btn-danger">删除</button>
+                <button onclick="event.stopPropagation(); editBook('${book.id}')" class="btn-secondary">编辑</button>
+                <button onclick="event.stopPropagation(); deleteBook('${book.id}')" class="btn-danger">删除</button>
             </div>
         `;
         booksGrid.appendChild(bookCard);
@@ -423,10 +536,32 @@ async function deleteBook(bookId) {
 }
 
 /**
- * 编辑书籍（预留）
+ * 编辑书籍
  */
-function editBook(bookId) {
-    alert('编辑功能开发中...');
+async function editBook(bookId) {
+    try {
+        const books = await dataManager.getUserBooks(currentUser.id);
+        const book = books.find(b => b.id === bookId);
+        
+        if (!book) {
+            alert('未找到该书籍');
+            return;
+        }
+        
+        // 填充编辑模态框
+        document.getElementById('editBookId').value = bookId;
+        document.getElementById('editBookName').value = book.name || '';
+        document.getElementById('editBookAuthor').value = book.author || '';
+        
+        // 显示编辑模态框
+        const modal = document.getElementById('editBookModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('获取书籍信息失败:', error);
+        alert('获取书籍信息失败: ' + error.message);
+    }
 }
 
 /**
@@ -448,6 +583,131 @@ function closeAddBookModal() {
         modal.classList.add('hidden');
     }
     clearBookForm();
+}
+
+// ==========================================
+// 书籍选择功能（用于启动页语录）
+// ==========================================
+
+/**
+ * 生成设备ID（基于浏览器+OS+屏幕分辨率的唯一标识）
+ */
+function getDeviceId() {
+    // 如果已经缓存了设备ID，直接返回
+    const cachedId = localStorage.getItem('deviceId');
+    if (cachedId) {
+        return cachedId;
+    }
+    
+    // 生成新的设备ID
+    const userAgent = navigator.userAgent;
+    const screenRes = `${screen.width}x${screen.height}`;
+    const deviceId = 'device_' + Math.random().toString(36).substring(2, 11);
+    
+    // 缓存设备ID
+    localStorage.setItem('deviceId', deviceId);
+    console.log('📱 设备ID:', deviceId);
+    return deviceId;
+}
+
+/**
+ * 获取当前用户已勾选的书籍列表（多设备支持）
+ */
+async function getSelectedBooks() {
+    try {
+        if (!currentUser) {
+            console.warn('⚠️ 没有登录用户');
+            return [];
+        }
+        
+        const deviceId = getDeviceId();
+        console.log('📱 获取设备勾选书籍，设备ID:', deviceId, '用户ID:', currentUser.id);
+        const selectedIds = await dataManager.getSelectedBooksForDevice(deviceId);
+        console.log('📚 设备上的勾选书籍ID列表:', selectedIds);
+        return selectedIds || [];
+    } catch (error) {
+        console.error('❗ 获取勾选书籍失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 保存用户勾选的书籍到云端（设备级别）
+ */
+async function saveSelectedBooks(bookIds) {
+    try {
+        if (!currentUser) {
+            console.warn('⚠️ 用户未登录，无法保存到云端');
+            return false;
+        }
+        
+        const deviceId = getDeviceId();
+        console.log('💾 保存勾选书籍到云端，用户:', currentUser.id, '设备:', deviceId);
+        
+        const result = await dataManager.saveSelectedBooksForDevice(deviceId, bookIds);
+        
+        if (result.success) {
+            console.log('✅ 已保存勾选的书籍到云端:', bookIds);
+            return true;
+        } else {
+            console.error('❗ 保存失败:', result.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('❗ 保存勾选书籍失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 切换书籍选择状态（修复版，防止数据覆盖）
+ */
+async function toggleBookSelection(bookId) {
+    try {
+        // 立即更新复选框状态，给用户即时反馈
+        const checkbox = document.getElementById(`book-${bookId}`);
+        const newCheckedState = checkbox ? checkbox.checked : false;
+        
+        console.log(newCheckedState ? '✅ 勾选书籍:' : '📖 取消勾选书籍:', bookId);
+        
+        // 重新从云端获取最新的勾选列表，避免使用过期缓存
+        const deviceId = getDeviceId();
+        const latestSelectedIds = await dataManager.getSelectedBooksForDevice(deviceId);
+        const selectedBooks = [...(latestSelectedIds || [])];
+        
+        console.log('📚 当前最新勾选列表:', selectedBooks);
+        
+        const index = selectedBooks.indexOf(bookId);
+        
+        if (index > -1) {
+            // 取消勾选
+            selectedBooks.splice(index, 1);
+            console.log('🔄 取消勾选后的列表:', selectedBooks);
+        } else {
+            // 勾选
+            selectedBooks.push(bookId);
+            console.log('🔄 勾选后的列表:', selectedBooks);
+        }
+        
+        // 保存到云端（异步，不阻塞UI）
+        const saveSuccess = await saveSelectedBooks(selectedBooks);
+        
+        if (!saveSuccess) {
+            alert('保存失败，请检查网络连接');
+            // 恢复复选框状态
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+        } else {
+            // 立即更新播放控制器的摘要信息（使用最新数据）
+            if (typeof updateSelectionSummary === 'function') {
+                updateSelectionSummary();
+            }
+        }
+    } catch (error) {
+        console.error('❗ 切换书籍选择失败:', error);
+        alert('操作失败: ' + error.message);
+    }
 }
 
 // ==========================================
@@ -480,10 +740,10 @@ async function manageQuotes(bookId) {
     showPage('quotesPage');
     await renderQuotes();
     
-    // 🎵 初始化播放控制器
+    // 🎵 初始化播放控制器（异步）
     if (typeof initPlaybackController === 'function') {
         console.log('🎵 初始化播放控制器...');
-        const initialized = initPlaybackController();
+        const initialized = await initPlaybackController();
         if (initialized) {
             console.log('✅ 播放控制器初始化成功');
         } else {
@@ -505,23 +765,56 @@ async function renderQuotes() {
         const quotes = await dataManager.getBookQuotes(currentBookId);
         
         if (!quotes || quotes.length === 0) {
-            quotesList.innerHTML = '<div class="empty-state">暂无语录，点击"添加语录"开始记录</div>';
+            quotesList.innerHTML = '<div class="empty-state">暂无语录，点击“添加语录”开始记录</div>';
             return;
         }
 
+        // 获取当前播放设置
+        const settings = typeof loadPlaybackSettings === 'function' ? loadPlaybackSettings(currentUser.username || currentUser.id || currentUser) : { mode: 'sequential', selectedQuotes: [] };
+        const isSingleMode = settings.mode === 'single';
+        
+        // 获取当前书籍已选中的语录ID列表
+        const selectedQuoteIds = new Set();
+        if (settings.selectedQuotes && Array.isArray(settings.selectedQuotes)) {
+            settings.selectedQuotes.forEach(sq => {
+                if (sq.bookId === currentBookId) {
+                    selectedQuoteIds.add(sq.quoteId);
+                }
+            });
+        }
+        
+        const hasSelected = selectedQuoteIds.size > 0;
+
         quotesList.innerHTML = '';
         quotes.forEach((quote) => {
+            const isSelected = selectedQuoteIds.has(quote.id);
+            
+            // 简化逻辑：
+            // 1. 非单条重复模式：所有语录勾选框禁用
+            // 2. 单条重复模式 + 已选中其他语录 + 当前语录未选中：禁用
+            const isDisabled = !isSingleMode || (isSingleMode && hasSelected && !isSelected);
+            
             const quoteItem = document.createElement('div');
             quoteItem.className = 'quote-item';
             quoteItem.innerHTML = `
-                <div class="quote-content">"${quote.text}"</div>
-                <div class="quote-meta">
-                    ${quote.page ? `<span>页码: ${quote.page}</span>` : ''}
-                    ${quote.tags && quote.tags.length > 0 ? `<span>标签: ${quote.tags.join(', ')}</span>` : ''}
+                <div class="quote-checkbox-container">
+                    <input type="checkbox" 
+                           class="quote-checkbox" 
+                           id="quote-check-${quote.id}" 
+                           ${isSelected ? 'checked' : ''}
+                           ${isDisabled ? 'disabled' : ''}
+                           onchange="toggleQuoteForPlayback('${quote.id}')">
                 </div>
-                <div class="quote-actions">
-                    <button onclick="editQuote('${quote.id}')" class="btn-secondary">编辑</button>
-                    <button onclick="deleteQuote('${quote.id}')" class="btn-danger">删除</button>
+                <div class="quote-content-main">
+                    <div class="quote-text">"${quote.text}"</div>
+                    <div class="quote-meta">
+                        ${quote.page ? `<span class="quote-page">📖 页码: ${quote.page}</span>` : ''}
+                        ${quote.tags && quote.tags.length > 0 ? `<span class="quote-tags">🏷️ 标签: ${quote.tags.join(', ')}</span>` : ''}
+                    </div>
+                </div>
+                <div class="quote-actions-bottom">
+                    <button onclick="editQuote('${quote.id}')" class="btn-edit">✏️ 编辑</button>
+                    <button onclick="deleteQuote('${quote.id}')" class="btn-delete">🗑️ 删除</button>
                 </div>
             `;
             quotesList.appendChild(quoteItem);
@@ -555,6 +848,12 @@ async function addNewQuote() {
         if (result.success) {
             await renderQuotes();
             closeAddQuoteModal();
+            
+            // 更新语录统计
+            if (typeof updateSelectionSummary === 'function') {
+                await updateSelectionSummary();
+            }
+            
             alert('语录添加成功！');
         } else {
             alert(result.error || '添加失败');
@@ -578,6 +877,12 @@ async function deleteQuote(quoteId) {
         
         if (result.success) {
             await renderQuotes();
+            
+            // 更新语录统计
+            if (typeof updateSelectionSummary === 'function') {
+                await updateSelectionSummary();
+            }
+            
             alert('语录已删除');
         } else {
             alert(result.error || '删除失败');
@@ -589,10 +894,92 @@ async function deleteQuote(quoteId) {
 }
 
 /**
- * 编辑语录（预留）
+ * 切换语录的播放选中状态
  */
-function editQuote(quoteId) {
-    alert('编辑功能开发中...');
+async function toggleQuoteForPlayback(quoteId) {
+    try {
+        if (!currentUser || !currentBookId) {
+            console.error('用户未登录或未选择书籍');
+            return;
+        }
+        
+        const username = currentUser.username || currentUser.id || currentUser;
+        const settings = typeof loadPlaybackSettings === 'function' ? loadPlaybackSettings(username) : { mode: 'sequential', selectedQuotes: [] };
+        
+        if (!settings.selectedQuotes) {
+            settings.selectedQuotes = [];
+        }
+        
+        // 查找是否已选中
+        const existingIndex = settings.selectedQuotes.findIndex(
+            sq => sq.bookId === currentBookId && sq.quoteId === quoteId
+        );
+        
+        if (existingIndex >= 0) {
+            // 取消选中语录
+            settings.selectedQuotes.splice(existingIndex, 1);
+            console.log('✅ 取消选中语录:', quoteId);
+        } else {
+            // 选中语录
+            const quoteSelection = {
+                bookId: currentBookId,
+                quoteId: quoteId
+            };
+            
+            // 如果是单条重复模式，清空其他选中的语录
+            if (settings.mode === 'single') {
+                // 只保留当前书籍的一条语录
+                settings.selectedQuotes = settings.selectedQuotes.filter(sq => sq.bookId !== currentBookId);
+                settings.selectedQuotes.push(quoteSelection);
+                console.log('🔂 单条重复模式：只选中当前语录:', quoteId);
+            } else {
+                settings.selectedQuotes.push(quoteSelection);
+                console.log('✅ 选中语录:', quoteId);
+            }
+        }
+        
+        // 保存设置到 localStorage
+        if (typeof savePlaybackSettings === 'function') {
+            savePlaybackSettings(username, settings);
+            console.log('💾 已保存语录选择设置');
+        }
+        
+        // 重新渲染语录列表以更新勾选框状态
+        await renderQuotes();
+        
+    } catch (error) {
+        console.error('切换语录选中状态失败:', error);
+    }
+}
+
+/**
+ * 编辑语录
+ */
+async function editQuote(quoteId) {
+    try {
+        const quotes = await dataManager.getBookQuotes(currentBookId);
+        const quote = quotes.find(q => q.id === quoteId);
+        
+        if (!quote) {
+            alert('未找到该语录');
+            return;
+        }
+        
+        // 填充编辑模态框
+        document.getElementById('editQuoteIndex').value = quoteId;
+        document.getElementById('editQuoteText').value = quote.text || '';
+        document.getElementById('editQuotePage').value = quote.page || '';
+        document.getElementById('editQuoteTag').value = quote.tags ? quote.tags.join(', ') : '';
+        
+        // 显示编辑模态框
+        const modal = document.getElementById('editQuoteModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('获取语录信息失败:', error);
+        alert('获取语录信息失败: ' + error.message);
+    }
 }
 
 /**
@@ -774,52 +1161,8 @@ function performSearch() {
 /**
  * 切换播放模式 - 与 playback-controller.js 集成
  */
-function changePlaybackMode(mode) {
-    console.log('🎥 切换播放模式:', mode);
-    
-    try {
-        // 直接将事件处理委托给 playback-controller.js 中的同名函数
-        // 注意：需要在 HTML 的 script 标签加载顺序中确保 playback-controller.js 在 script-jsonbin.js 之前加载
-        
-        // 方式1：如果已重命名为其他函数（推荐）
-        if (typeof handlePlaybackModeChange === 'function') {
-            handlePlaybackModeChange(mode);
-            console.log('✅ 播放模式已交由 playback-controller 处理');
-            return;
-        }
-        
-        // 方式2：直接通过事件参数访问
-        const playbackModeFunctions = {
-            'sequential': () => {
-                console.log('📊 顺序播放模式已激活');
-                if (window.playbackController && typeof window.playbackController.setSequentialMode === 'function') {
-                    window.playbackController.setSequentialMode();
-                }
-            },
-            'random': () => {
-                console.log('🎲 随机播放模式已激活');
-                if (window.playbackController && typeof window.playbackController.setRandomMode === 'function') {
-                    window.playbackController.setRandomMode();
-                }
-            },
-            'single': () => {
-                console.log('🔂 单条重复模式已激活');
-                if (window.playbackController && typeof window.playbackController.setSingleMode === 'function') {
-                    window.playbackController.setSingleMode();
-                }
-            }
-        };
-        
-        if (playbackModeFunctions[mode]) {
-            playbackModeFunctions[mode]();
-        } else {
-            console.warn('⚠️ 未知的播放模式:', mode);
-        }
-        
-    } catch (error) {
-        console.error('切换播放模式失败:', error);
-    }
-}
+// changePlaybackMode 函数已移至 playback-controller.js
+// HTML 中直接调用 playback-controller.js 中的函数
 
 /**
  * 保存书籍编辑
@@ -841,18 +1184,130 @@ function closeEditBookModal() {
 /**
  * 保存语录编辑
  */
-function saveQuoteEdit() {
-    alert('编辑程序开发中...');
+async function saveQuoteEdit() {
+    const quoteId = document.getElementById('editQuoteIndex').value;
+    const text = document.getElementById('editQuoteText').value;
+    const page = document.getElementById('editQuotePage').value;
+    const tag = document.getElementById('editQuoteTag').value;
+    
+    if (!text) {
+        alert('请输入语录内容');
+        return;
+    }
+    
+    try {
+        const result = await dataManager.updateQuote(currentBookId, quoteId, {
+            text: text,
+            page: page || '',
+            tags: tag ? tag.split(',').map(t => t.trim()) : []
+        });
+        
+        if (result.success) {
+            await renderQuotes();
+            closeEditQuoteModal();
+            
+            // 更新语录统计
+            if (typeof updateSelectionSummary === 'function') {
+                await updateSelectionSummary();
+            }
+            
+            alert('语录更新成功！');
+        } else {
+            alert(result.error || '更新失败');
+        }
+    } catch (error) {
+        console.error('更新语录异常:', error);
+        alert('更新语录失败: ' + error.message);
+    }
 }
 
 /**
- * 关閼语录编辑模态框
+ * 关闭语录编辑模态框
  */
 function closeEditQuoteModal() {
     const modal = document.getElementById('editQuoteModal');
     if (modal) {
         modal.classList.add('hidden');
     }
+}
+
+// ==========================================
+// 书籍编辑相关函数
+// ==========================================
+
+/**
+ * 保存书籍编辑
+ */
+async function saveBookEdit() {
+    const bookId = document.getElementById('editBookId').value;
+    const name = document.getElementById('editBookName').value;
+    const author = document.getElementById('editBookAuthor').value;
+    
+    if (!name || !author) {
+        alert('请填写书籍名称和作者');
+        return;
+    }
+    
+    try {
+        const result = await dataManager.updateBook(bookId, {
+            name: name,
+            author: author
+        });
+        
+        if (result.success) {
+            await loadUserData();
+            closeEditBookModal();
+            alert('书籍信息更新成功！');
+        } else {
+            alert(result.error || '更新失败');
+        }
+    } catch (error) {
+        console.error('更新书籍异常:', error);
+        alert('更新书籍失败: ' + error.message);
+    }
+}
+
+/**
+ * 关闭书籍编辑模态框
+ */
+function closeEditBookModal() {
+    const modal = document.getElementById('editBookModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// ==========================================
+// 键盘事件绑定
+// ==========================================
+
+/**
+ * 设置登录页 Enter 键快捷键
+ */
+function setupLoginEnterKey() {
+    // 登录页密码输入框
+    const loginPasswordInput = document.getElementById('password');
+    if (loginPasswordInput) {
+        loginPasswordInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                login();
+            }
+        });
+    }
+    
+    // 登录页用户名输入框也支持 Enter
+    const loginUsernameInput = document.getElementById('username');
+    if (loginUsernameInput) {
+        loginUsernameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                login();
+            }
+        });
+    }
+    
+    console.log('✅ 登录页 Enter 键快捷键已启用');
 }
 
 console.log('✅ script-jsonbin.js 配置完成');

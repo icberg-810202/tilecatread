@@ -279,6 +279,8 @@ class DataManager {
      */
     async addQuote(bookId, quoteData) {
         console.log('✍️ 添加语录');
+        console.log('   书籍ID:', bookId);
+        console.log('   当前用户:', this.currentUser);
         
         try {
             if (!this.currentUser) {
@@ -286,7 +288,15 @@ class DataManager {
             }
 
             const userData = await jsonbinLoadUserData(this.currentUser.id);
+            console.log('   按美数据已加载，用户书籍数:', userData.books ? userData.books.length : 0);
+            console.log('   用户所有书籍ID:', userData.books.map(b => b.id));
+            
             const book = userData.books.find(b => b.id === bookId);
+            console.log('   查找结果:', book ? '✅ 找到' : '❌ 找不到');
+            
+            if (book) {
+                console.log('   书籍信息:', { id: book.id, name: book.name, quotesCount: book.quotes ? book.quotes.length : 0 });
+            }
             
             if (!book) {
                 throw new Error('书籍不存在');
@@ -305,6 +315,7 @@ class DataManager {
             };
 
             book.quotes.push(newQuote);
+            console.log('   语录已添加到书籍，始数量:', book.quotes.length);
 
             // 保存到 JSONbin
             await jsonbinSaveUserData(this.currentUser.id, userData);
@@ -352,6 +363,114 @@ class DataManager {
     }
 
     /**
+     * 更新书籍信息
+     */
+    async updateBook(bookId, bookData) {
+        console.log('✏️ 更新书籍:', bookId);
+        
+        try {
+            if (!this.currentUser) {
+                throw new Error('用户未登录');
+            }
+
+            const userData = await jsonbinLoadUserData(this.currentUser.id);
+            const book = userData.books.find(b => b.id === bookId);
+            
+            if (!book) {
+                throw new Error('书籍不存在');
+            }
+
+            // 更新书籍信息
+            if (bookData.name !== undefined) {
+                book.name = bookData.name;
+            }
+            if (bookData.author !== undefined) {
+                book.author = bookData.author;
+            }
+            book.updatedAt = new Date().toISOString();
+
+            await jsonbinSaveUserData(this.currentUser.id, userData);
+            this.saveLocalCache(this.currentUser.id, userData);
+
+            console.log('✅ 书籍更新成功');
+            return { success: true, book: book };
+        } catch (error) {
+            console.error('❌ 更新书籍失败:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * 保存用户在某设备上的勾选书籍
+     */
+    async saveSelectedBooksForDevice(deviceId, selectedBookIds) {
+        console.log('📱 保存设备选择:', deviceId);
+        
+        try {
+            if (!this.currentUser) {
+                throw new Error('用户未登录');
+            }
+
+            const userData = await jsonbinLoadUserData(this.currentUser.id);
+            
+            // 初始化设备选择记录
+            if (!userData.deviceSelections) {
+                userData.deviceSelections = {};
+            }
+            
+            // 保存该设备上的选择
+            userData.deviceSelections[deviceId] = {
+                selectedBookIds: selectedBookIds,
+                updatedAt: new Date().toISOString()
+            };
+            
+            await jsonbinSaveUserData(this.currentUser.id, userData);
+            console.log('✅ 设备选择已保存');
+            return { success: true };
+        } catch (error) {
+            console.error('❌ 保存设备选择失败:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 获取用户在某设备上的勾选书籍
+     * @param {string} deviceId - 设备ID
+     * @param {string} userId - 用户ID（可选，如果不提供则使用当前登录用户）
+     */
+    async getSelectedBooksForDevice(deviceId, userId = null) {
+        console.log('📱 获取设备选择:', deviceId, '用户ID:', userId);
+        
+        try {
+            // 如果没有提供userId，使用当前登录的用户
+            const targetUserId = userId || (this.currentUser ? this.currentUser.id : null);
+            
+            if (!targetUserId) {
+                console.warn('⚠️ 没有指定用户ID且用户未登录，返回空选择');
+                return [];
+            }
+
+            const userData = await jsonbinLoadUserData(targetUserId);
+            console.log('📊 用户数据加载成功，userData.deviceSelections:', userData.deviceSelections);
+            
+            if (userData.deviceSelections && userData.deviceSelections[deviceId]) {
+                const selectedIds = userData.deviceSelections[deviceId].selectedBookIds || [];
+                console.log(`✅ 设备 ${deviceId} 的勾选书籍ID:`, selectedIds);
+                return selectedIds;
+            }
+            
+            console.log(`⚠️ 设备 ${deviceId} 没有保存的勾选记录`);
+            return [];
+        } catch (error) {
+            console.error('❌ 获取设备选择失败:', error);
+            return [];
+        }
+    }
+
+    /**
      * 删除语录
      */
     async deleteQuote(bookId, quoteId) {
@@ -378,6 +497,51 @@ class DataManager {
             return { success: true };
         } catch (error) {
             console.error('❌ 删除失败:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * 更新语录
+     */
+    async updateQuote(bookId, quoteId, quoteData) {
+        console.log('✏️ 更新语录:', quoteId);
+        
+        try {
+            if (!this.currentUser) {
+                throw new Error('用户未登录');
+            }
+
+            const userData = await jsonbinLoadUserData(this.currentUser.id);
+            const book = userData.books.find(b => b.id === bookId);
+            
+            if (!book) {
+                throw new Error('书籍不存在');
+            }
+
+            const quoteIndex = book.quotes.findIndex(q => q.id === quoteId);
+            if (quoteIndex === -1) {
+                throw new Error('语录不存在');
+            }
+
+            // 更新语录内容
+            book.quotes[quoteIndex] = {
+                ...book.quotes[quoteIndex],
+                text: quoteData.text,
+                page: quoteData.page || '',
+                tags: quoteData.tags || []
+            };
+
+            await jsonbinSaveUserData(this.currentUser.id, userData);
+            this.saveLocalCache(this.currentUser.id, userData);
+
+            console.log('✅ 语录已更新');
+            return { success: true, quote: book.quotes[quoteIndex] };
+        } catch (error) {
+            console.error('❌ 更新失败:', error);
             return {
                 success: false,
                 error: error.message

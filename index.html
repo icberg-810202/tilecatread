@@ -181,6 +181,31 @@
             </div>
         </header>
 
+        <!-- 播放模式控制面板 -->
+        <div class="playback-control-panel" id="mainPlaybackControl">
+            <div class="playback-header">
+                <span class="playback-title">🎵 语录播放设置</span>
+                <span class="playback-hint" id="mainPlaybackHint">选择播放模式，启动页将按模式显示语录</span>
+            </div>
+            <div class="playback-modes horizontal">
+                <label class="playback-mode-option">
+                    <input type="radio" name="mainPlaybackMode" value="sequential" onclick="changePlaybackMode('sequential')" checked>
+                    <span class="mode-icon">▶️</span>
+                    <span class="mode-label">顺序播放</span>
+                </label>
+                <label class="playback-mode-option">
+                    <input type="radio" name="mainPlaybackMode" value="random" onclick="changePlaybackMode('random')">
+                    <span class="mode-icon">🔀</span>
+                    <span class="mode-label">随机播放</span>
+                </label>
+                <label class="playback-mode-option">
+                    <input type="radio" name="mainPlaybackMode" value="single" onclick="changePlaybackMode('single')">
+                    <span class="mode-icon">🔂</span>
+                    <span class="mode-label">单条重复</span>
+                </label>
+            </div>
+        </div>
+
         <main class="book-shelf">
             <div class="books-grid" id="booksGrid">
                 <!-- 书籍卡片 -->
@@ -201,37 +226,6 @@
         </header>
         
         <div class="quotes-management">
-            <!-- 播放模式控制面板 -->
-            <div class="playback-control-panel">
-                <div class="playback-header">
-                    <span class="playback-title">🎵 语录播放设置</span>
-                    <span class="playback-hint" id="playbackHint">选择播放模式，启动页将按模式显示语录</span>
-                </div>
-                <div class="playback-modes">
-                    <label class="playback-mode-option">
-                        <input type="radio" name="playbackMode" value="sequential" onclick="changePlaybackMode('sequential')">
-                        <span class="mode-icon">▶️</span>
-                        <span class="mode-label">顺序播放</span>
-                        <span class="mode-desc">按顺序显示选中的语录</span>
-                    </label>
-                    <label class="playback-mode-option">
-                        <input type="radio" name="playbackMode" value="random" onclick="changePlaybackMode('random')">
-                        <span class="mode-icon">🔀</span>
-                        <span class="mode-label">随机播放</span>
-                        <span class="mode-desc">随机显示选中的语录</span>
-                    </label>
-                    <label class="playback-mode-option">
-                        <input type="radio" name="playbackMode" value="single" onclick="changePlaybackMode('single')">
-                        <span class="mode-icon">🔂</span>
-                        <span class="mode-label">单条重复</span>
-                        <span class="mode-desc">重复显示选中的一条语录</span>
-                    </label>
-                </div>
-                <div class="selection-summary" id="selectionSummary">
-                    <!-- 选择统计信息 -->
-                </div>
-            </div>
-            
             <div class="quotes-list" id="quotesList">
                 <!-- 语录列表 -->
             </div>
@@ -277,6 +271,20 @@
             <div class="modal-actions">
                 <button onclick="addNewQuote()" class="btn-primary">保存</button>
                 <button onclick="closeAddQuoteModal()" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑书籍模态框 -->
+    <div id="editBookModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>编辑书籍</h3>
+            <input type="hidden" id="editBookId">
+            <input type="text" id="editBookName" placeholder="书籍名称">
+            <input type="text" id="editBookAuthor" placeholder="作者">
+            <div class="modal-actions">
+                <button onclick="saveBookEdit()" class="btn-primary">保存</button>
+                <button onclick="closeEditBookModal()" class="btn-secondary">取消</button>
             </div>
         </div>
     </div>

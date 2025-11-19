@@ -87,7 +87,7 @@ function loadPlaybackSettings(username) {
     
     // 返回默认设置
     return {
-        mode: 'random', // 默认随机播放
+        mode: 'sequential', // 默认顺序播放
         selectedQuotes: [],
         currentIndex: 0
     };
@@ -107,8 +107,7 @@ function savePlaybackSettings(username, settings) {
 
 // 更新播放提示信息
 function updatePlaybackHint(mode, count) {
-    const hintElement = document.getElementById('playbackHint');
-    if (!hintElement) return;
+    const mainHintElement = document.getElementById('mainPlaybackHint');
     
     let hint = '';
     switch (mode) {
@@ -136,29 +135,159 @@ function updatePlaybackHint(mode, count) {
             }
             break;
     }
-    hintElement.textContent = hint;
+    if (mainHintElement) mainHintElement.textContent = hint;
 }
 
-// 更新播放UI（选中的单选按钮和.checked类）- 增强版
-function updatePlaybackUI() {
-    if (!currentUser || currentBookIndex === null) return;
+/**
+ * 获取启动页应该显示的语录
+ * @param {string} username - 用户名
+ * @param {string} deviceId - 设备ID
+ * @returns {Promise<Object|null>} 语录对象或null
+ */
+async function getSplashQuote(username, deviceId) {
+    try {
+        console.log('📚 获取启动页语录 - 用户:', username, '设备:', deviceId);
+        
+        // 1. 检查是否有勾选的书籍
+        if (typeof dataManager === 'undefined' || !dataManager.getSelectedBooksForDevice) {
+            console.warn('⚠️ dataManager 不可用，跳过勾选书籍检查');
+            return null;
+        }
+        
+        // 传递用户ID作为第二个参数，以便在未登录状态也能获取
+        const selectedBookIds = await dataManager.getSelectedBooksForDevice(deviceId, username);
+        console.log('📚 设备勾选的书籍ID:', selectedBookIds);
+        
+        if (!selectedBookIds || selectedBookIds.length === 0) {
+            console.log('⚠️ 没有勾选任何书籍，将使用默认语录');
+            return null;
+        }
+        
+        // 2. 获取用户的所有书籍
+        const userBooks = await dataManager.getUserBooks(username);
+        console.log('📚 用户书籍总数:', userBooks.length);
+        
+        // 3. 获取播放设置（提前获取，用于判断是否有选中的语录）
+        const settings = loadPlaybackSettings(username);
+        console.log('🎵 播放模式:', settings.mode);
+        console.log('📝 已选中的语录:', settings.selectedQuotes);
+        
+        // 4. 收集语录：如果有选中的语录，只收集选中的；否则收集所有勾选书籍的语录
+        const allQuotes = [];
+        
+        if (settings.selectedQuotes && settings.selectedQuotes.length > 0) {
+            // 有选中的语录，只收集选中的语录
+            console.log('🎯 检测到用户选中的语录，优先使用');
+            settings.selectedQuotes.forEach(sq => {
+                const book = userBooks.find(b => b.id === sq.bookId);
+                if (book && book.quotes) {
+                    const quote = book.quotes.find(q => q.id === sq.quoteId);
+                    if (quote) {
+                        allQuotes.push({
+                            text: quote.text,
+                            bookName: book.name,
+                            author: book.author,
+                            page: quote.page || '',
+                            bookId: book.id,
+                            quoteId: quote.id
+                        });
+                        console.log(`✅ 添加选中语录: 《${book.name}》 - "${quote.text.substring(0, 20)}..."`);
+                    }
+                }
+            });
+        } else {
+            // 没有选中的语录，收集所有勾选书籍的所有语录
+            console.log('📚 没有选中的语录，收集所有勾选书籍的语录');
+            
+            // 按照书籍添加顺序（userBooks 中的顺序）遍历
+            // 只收集被勾选的书籍
+            userBooks.forEach(book => {
+                // 检查该书籍是否被勾选
+                if (selectedBookIds.includes(book.id)) {
+                    if (book.quotes && book.quotes.length > 0) {
+                        console.log(`📖 书籍 "${book.name}" 包含 ${book.quotes.length} 条语录`);
+                        book.quotes.forEach(quote => {
+                            allQuotes.push({
+                                text: quote.text,
+                                bookName: book.name,
+                                author: book.author,
+                                page: quote.page || '',
+                                bookId: book.id,
+                                quoteId: quote.id
+                            });
+                        });
+                    }
+                }
+            });
+        }
+        
+        console.log('📊 总计收集到 ' + allQuotes.length + ' 条语录');
+        
+        if (allQuotes.length === 0) {
+            console.log('⚠️ 勾选的书籍中没有语录，将使用默认语录');
+            return null;
+        }
+        
+        // 5. 根据播放模式选择语录
+        let selectedQuote = null;
+        
+        switch (settings.mode) {
+            case 'sequential':
+                // 顺序播放：使用上次的索引，按顺序循环
+                const currentIndex = settings.currentIndex || 0;
+                const nextIndex = currentIndex % allQuotes.length;
+                selectedQuote = allQuotes[nextIndex];
+                
+                // 更新索引以便下次使用
+                settings.currentIndex = (nextIndex + 1) % allQuotes.length;
+                savePlaybackSettings(username, settings);
+                console.log(`▶️ 顺序播放: 第 ${nextIndex + 1}/${allQuotes.length} 条`);
+                break;
+                
+            case 'random':
+                // 随机播放
+                const randomIndex = Math.floor(Math.random() * allQuotes.length);
+                selectedQuote = allQuotes[randomIndex];
+                console.log(`🔀 随机播放: 第 ${randomIndex + 1}/${allQuotes.length} 条`);
+                break;
+                
+            case 'single':
+                // 单条重复：总是显示第一条
+                selectedQuote = allQuotes[0];
+                console.log('🔂 单条重复: 第 1 条');
+                break;
+                
+            default:
+                // 默认使用第一条
+                selectedQuote = allQuotes[0];
+        }
+        
+        console.log('✅ 已选择语录:', selectedQuote.bookName);
+        return selectedQuote;
+        
+    } catch (error) {
+        console.error('❗ 获取启动页语录失败:', error);
+        return null;
+    }
+}
+
+// 更新播放UI（选中的单选按钮和.checked类）
+async function updatePlaybackUI() {
+    if (!currentUser) return;
     
     const settings = loadPlaybackSettings(currentUser);
     
-    // 更新单选按钮状态
-    const radios = document.getElementsByName('playbackMode');
-    radios.forEach(radio => {
+    // 更新主页面的单选按钮状态
+    const mainRadios = document.getElementsByName('mainPlaybackMode');
+    mainRadios.forEach(radio => {
         const option = radio.closest('.playback-mode-option');
         if (radio.value === settings.mode) {
             radio.checked = true;
-            // 为兼容性，添加 .checked 类（:has() 选择器不被所有浏览器支持）
             if (option) {
                 option.classList.add('checked');
             }
-            console.log('✅ 已选中模式:', settings.mode);
         } else {
             radio.checked = false;
-            // 移除其他选项的 .checked 类
             if (option) {
                 option.classList.remove('checked');
             }
@@ -166,59 +295,14 @@ function updatePlaybackUI() {
     });
     
     // 更新选择摘要
-    updateSelectionSummary();
+    await updateSelectionSummary();
 }
 
-// 更新选择摘要信息 - 修复版
-function updateSelectionSummary() {
-    const summaryElement = document.getElementById('selectionSummary');
-    if (!summaryElement) {
-        console.warn('⚠️ 选择摘要元素未找到');
-        return;
-    }
-    
-    try {
-        const user = getCurrentUserSafe();
-        if (!user || currentBookIndex === null) {
-            summaryElement.innerHTML = '请先选择书籍';
-            return;
-        }
-        
-        const settings = loadPlaybackSettings(user.username || user.id || user);
-        const book = getCurrentBook();
-        
-        if (!book) {
-            summaryElement.innerHTML = '书籍数据加载失败';
-            return;
-        }
-        
-        const selectedCount = settings.selectedQuotes.filter(q => q.bookIndex === currentBookIndex).length;
-        const totalQuotes = book.quotes ? book.quotes.length : 0;
-        
-        let modeText = '';
-        switch (settings.mode) {
-            case 'sequential':
-                modeText = '顺序播放';
-                break;
-            case 'random':
-                modeText = '随机播放';
-                break;
-            case 'single':
-                modeText = '单条重复';
-                break;
-            default:
-                modeText = '未知模式';
-        }
-        
-        summaryElement.innerHTML = `
-            当前模式：<strong>${modeText}</strong> | 
-            本书已选：<strong>${selectedCount}</strong>/${totalQuotes}条 | 
-            全部已选：<strong>${settings.selectedQuotes.length}</strong>条
-        `;
-    } catch (error) {
-        console.error('更新选择摘要信息失败:', error);
-        summaryElement.innerHTML = '数据处理错误';
-    }
+// 更新选择摘要信息 - 简化版（只显示播放模式）
+async function updateSelectionSummary() {
+    // 此函数已简化，不再统计语录数量
+    // 仅保留函数以兼容其他代码调用
+    console.log('✅ 选择摘要更新完成（已简化）');
 }
 
 // 切换语录选中状态
@@ -283,7 +367,7 @@ function isQuoteSelected(bookIndex, quoteIndex) {
 }
 
 // 切换播放模式 - 增强版
-function changePlaybackMode(newMode) {
+async function changePlaybackMode(newMode) {
     console.log('=== 切换播放模式 ===');
     
     try {
@@ -324,8 +408,8 @@ function changePlaybackMode(newMode) {
         }
         
         // 更新单选按钮状态 - 添加/移除 .checked 类
-        const radios = document.getElementsByName('playbackMode');
-        radios.forEach(radio => {
+        const mainRadios = document.getElementsByName('mainPlaybackMode');
+        mainRadios.forEach(radio => {
             const option = radio.closest('.playback-mode-option');
             if (radio.value === newMode) {
                 radio.checked = true;
@@ -343,12 +427,18 @@ function changePlaybackMode(newMode) {
         
         // 更新UI
         updatePlaybackHint(newMode, settings.selectedQuotes.length);
-        updateSelectionSummary();
+        await updateSelectionSummary();
         
-        // 重新渲染语录列表（如果函数存在）
-        if (typeof renderQuotesList === 'function') {
-            renderQuotesList();
-            console.log('语录列表已重新渲染');
+        // 重新渲染书籍列表，以更新勾选框的禁用状态
+        if (typeof loadUserData === 'function') {
+            await loadUserData();
+            console.log('✅ 书籍列表已重新渲染');
+        }
+        
+        // 如果当前在语录页面，也要重新渲染
+        if (typeof renderQuotes === 'function' && typeof currentBookId !== 'undefined' && currentBookId) {
+            await renderQuotes();
+            console.log('✅ 语录页面已重新渲染');
         }
         
         console.log(`播放模式已切换: ${oldMode} → ${newMode}`);
@@ -358,7 +448,7 @@ function changePlaybackMode(newMode) {
 }
 
 // 初始化播放控制面板 - 增强版
-function initPlaybackController() {
+async function initPlaybackController() {
     console.log('🔧 初始化播放控制器...');
     
     try {
@@ -383,36 +473,32 @@ function initPlaybackController() {
         
         const settings = loadPlaybackSettings(user.username || user.id || user);
         
-        // 更新单选按钮状态 - 包含 .checked 类（兼容性）
-        const radios = document.getElementsByName('playbackMode');
-        if (radios.length > 0) {
-            radios.forEach(radio => {
+        // 更新主页面的单选按钮状态
+        const mainRadios = document.getElementsByName('mainPlaybackMode');
+        if (mainRadios.length > 0) {
+            mainRadios.forEach(radio => {
                 const option = radio.closest('.playback-mode-option');
                 if (radio.value === settings.mode) {
                     radio.checked = true;
-                    // 为兼容性，添加 .checked 类（:has() 选择器不被所有浏览器支持）
                     if (option) {
                         option.classList.add('checked');
                     }
                 } else {
                     radio.checked = false;
-                    // 移除其他选项的 .checked 类
                     if (option) {
                         option.classList.remove('checked');
                     }
                 }
             });
-            console.log('✅ 播放模式单选按钮已更新》.checked类深接填充成功');
-        } else {
-            console.warn('⚠️ 播放模式单选按钮未找到');
+            console.log('✅ 主页面播放模式单选按钮已更新');
         }
         
         // 更新提示信息
         updatePlaybackHint(settings.mode, settings.selectedQuotes.length);
         console.log('✅ 提示信息已更新');
         
-        // 更新选择摘要
-        updateSelectionSummary();
+        // 更新选择摘要（异步）
+        await updateSelectionSummary();
         console.log('✅ 选择摘要已更新');
         
         console.log('✅ 播放控制面板已初始化');
