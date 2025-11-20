@@ -5,12 +5,13 @@ body {
     font-family: 'Microsoft YaHei', sans-serif;
     background: #f0f2f5;
     height: 100vh;
-    overflow: hidden;
+    overflow: auto; /* 允许滚动 */
     /* 移动端触摸优化 */
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 /* 允许输入框和文本区域选择文字 */
@@ -33,6 +34,8 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     width: 100%;
     height: 100%;
     background: inherit;
+    overflow-y: auto; /* 允许垂直滚动 */
+    -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 .hidden {
@@ -524,6 +527,8 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     background: #f0f2f5;
     display: flex;
     flex-direction: column;
+    min-height: 100vh; /* 最小高度 */
+    overflow: visible; /* 允许内容溢出 */
 }
 
 .header {
@@ -533,7 +538,6 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     flex-shrink: 0;
     z-index: 100;
     position: relative;
-    touch-action: pan-y; /* 允许垂直滚动 */
 }
 
 .user-info {
@@ -1125,8 +1129,8 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     flex-wrap: wrap;
     gap: 15px;
     justify-content: center;
-    overflow-y: auto;
     flex: 1;
+    overflow: visible; /* 允许内容溢出而不是滚动 */
     -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
@@ -1436,7 +1440,6 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     padding: 15px;
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    touch-action: pan-y; /* 允许垂直滚动 */
 }
 
 .playback-header {
