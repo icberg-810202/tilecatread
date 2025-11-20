@@ -159,7 +159,17 @@ async function getSplashQuote(username, deviceId) {
         console.log('📚 设备勾选的书籍ID:', selectedBookIds);
         
         if (!selectedBookIds || selectedBookIds.length === 0) {
-            console.log('⚠️ 没有勾选任何书籍，将使用默认语录');
+            console.log('⚠️ 没有勾选任何书籍，清除语录选择并使用默认语录');
+            
+            // 清除用户的语录选择
+            const settings = loadPlaybackSettings(username);
+            if (settings.selectedQuotes && settings.selectedQuotes.length > 0) {
+                console.log('🧹 清除已选中的语录');
+                settings.selectedQuotes = [];
+                settings.currentIndex = 0;
+                savePlaybackSettings(username, settings);
+            }
+            
             return null;
         }
         
