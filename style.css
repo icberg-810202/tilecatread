@@ -6,6 +6,23 @@ body {
     background: #f0f2f5;
     height: 100vh;
     overflow: hidden;
+    /* 移动端触摸优化 */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 允许输入框和文本区域选择文字 */
+input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* 按钮触摸反馈 */
+button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* 页面容器 - 修复关键样式 */
@@ -640,6 +657,33 @@ body {
         margin: 15px;
     }
     
+    /* 移动端头部优化 */
+    .header {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 20px;
+        margin: 8px 0;
+    }
+    
+    .user-info {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 14px;
+    }
+    
+    .user-info span {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .logout-btn, .btn-backup, .btn-restore {
+        padding: 8px 12px;
+        font-size: 13px;
+        flex: 1;
+    }
+    
     .search-bar {
         flex-wrap: wrap;
         gap: 8px;
@@ -663,55 +707,165 @@ body {
     /* 移动端播放控制面板优化 */
     .playback-control-panel {
         padding: 15px;
-        margin: 0 -15px 20px -15px;
-        border-radius: 0;
+        margin: 15px 0;
+        border-radius: 8px;
     }
     
-    .playback-modes {
-        gap: 8px;
+    .playback-title {
+        font-size: 16px;
     }
     
-    .playback-mode-option {
-        padding: 10px 12px;
-        flex-wrap: wrap;
-    }
-    
-    .mode-desc {
-        width: 100%;
-        margin-left: 40px;
-        margin-top: 4px;
+    .playback-hint {
         font-size: 11px;
     }
     
-    /* 增强移动端语录页面样式 */
+    .playback-modes.horizontal {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .playback-mode-option {
+        padding: 12px 14px;
+        width: 100%;
+    }
+    
+    .mode-label {
+        min-width: auto;
+        flex: 1;
+    }
+    
+    /* 移动端书架优化 */
+    .book-shelf {
+        padding: 15px;
+    }
+    
+    .books-grid {
+        gap: 12px;
+    }
+    
+    .book-card {
+        width: calc(50% - 6px);
+        height: auto;
+        min-height: 180px;
+    }
+    
+    .add-book-card {
+        width: calc(50% - 6px);
+        height: auto;
+        min-height: 180px;
+    }
+    
+    .book-cover {
+        width: 60px;
+        height: 80px;
+    }
+    
+    .book-title {
+        font-size: 13px;
+    }
+    
+    .book-author {
+        font-size: 11px;
+    }
+    
+    .book-stats {
+        font-size: 10px;
+    }
+    
+    .book-actions button {
+        font-size: 9px;
+        padding: 3px 5px;
+        min-width: 28px;
+    }
+    
+    /* 移动端语录管理页优化 */
     .quotes-management {
         padding: 15px;
         max-width: 100%;
     }
     
     .quote-item {
-        padding: 12px;
+        padding: 15px;
+        min-height: auto;
+    }
+    
+    .quote-content-main {
+        margin-left: 35px;
+        padding-bottom: 60px;
+    }
+    
+    .quote-text {
+        font-size: 14px;
+        line-height: 1.6;
+        text-align: left;
+    }
+    
+    .quote-meta {
+        font-size: 11px;
+        justify-content: flex-start;
+    }
+    
+    .quote-number {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+        left: 35px;
+    }
+    
+    .quote-checkbox {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .quote-actions-bottom {
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .btn-edit, .btn-delete {
+        padding: 6px 12px;
+        font-size: 13px;
+        flex: 1;
+    }
+    
+    .add-quote-btn {
+        padding: 14px;
+        font-size: 15px;
+        position: sticky;
+        bottom: 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* 移动端模态框优化 */
+    .modal-content {
+        width: calc(100% - 40px);
+        max-width: 400px;
+        padding: 20px;
+    }
+    
+    .modal-content h3 {
+        font-size: 18px;
+    }
+    
+    .modal-content input,
+    .modal-content textarea {
+        font-size: 16px; /* 防止iOS自动缩放 */
+    }
+    
+    .modal-actions {
         flex-direction: column;
-        align-items: stretch;
     }
     
-    .quote-content-wrapper {
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 30px; /* 为复选框和序号留出空间 */
-    }
-    
-    .quote-actions {
-        margin-top: 10px;
-        justify-content: flex-end;
+    .modal-actions button {
+        width: 100%;
     }
 }
 
 @media (max-width: 480px) {
     .quote-card {
-        width: 250px;
+        width: calc(100% - 30px);
         padding: 20px;
-        margin: 10px;
+        margin: 10px 15px;
     }
     
     .login-container {
@@ -724,29 +878,148 @@ body {
         font-size: 15px;
     }
     
+    /* 小屏幕单列布局 */
     .book-card {
-        width: 130px;
-        height: 150px;
+        width: calc(50% - 6px);
+        height: auto;
+        min-height: 160px;
     }
     
     .add-book-card {
-        width: 130px;
-        height: 150px;
+        width: calc(50% - 6px);
+        height: auto;
+        min-height: 160px;
+    }
+    
+    .book-cover {
+        width: 50px;
+        height: 70px;
+    }
+    
+    .book-title {
+        font-size: 12px;
+    }
+    
+    .book-author {
+        font-size: 10px;
+    }
+    
+    /* 移动端语录页面更紧凑 */
+    .quote-item {
+        padding: 12px;
+    }
+    
+    .quote-content-main {
+        margin-left: 30px;
+        padding-bottom: 55px;
+    }
+    
+    .quote-text {
+        font-size: 13px;
+    }
+    
+    .quote-number {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+        left: 30px;
+    }
+    
+    .btn-edit, .btn-delete {
+        padding: 5px 10px;
+        font-size: 12px;
     }
 }
 
 /* 超小屏幕优化（360px及以下）*/
 @media (max-width: 360px) {
+    /* 认证页面优化 */
+    .auth-container {
+        padding: 20px 16px;
+    }
+    
+    .auth-logo h1 {
+        font-size: 24px;
+    }
+    
+    .auth-header h2 {
+        font-size: 18px;
+    }
+    
+    /* 书库优化 */
     .book-card, .add-book-card {
-        width: 120px;
-        height: 140px;
+        width: calc(50% - 6px);
+        height: auto;
+        min-height: 150px;
+        padding: 10px;
+    }
+    
+    .book-cover {
+        width: 45px;
+        height: 65px;
     }
     
     .book-title {
-        font-size: 13px;
+        font-size: 11px;
     }
     
     .book-author {
+        font-size: 9px;
+    }
+    
+    .book-stats {
+        font-size: 9px;
+    }
+    
+    .book-actions button {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+    
+    /* 语录页面优化 */
+    .quotes-management {
+        padding: 10px;
+    }
+    
+    .quote-item {
+        padding: 10px;
+    }
+    
+    .quote-content-main {
+        margin-left: 28px;
+    }
+    
+    .quote-text {
+        font-size: 12px;
+    }
+    
+    .quote-number {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+        left: 28px;
+    }
+    
+    .btn-edit, .btn-delete {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    /* 头部优化 */
+    .header {
+        padding: 10px;
+    }
+    
+    .header h1 {
+        font-size: 18px;
+    }
+    
+    .user-info {
+        font-size: 12px;
+    }
+    
+    .logout-btn, .btn-backup, .btn-restore {
+        padding: 6px 10px;
         font-size: 11px;
     }
 }
@@ -789,6 +1062,7 @@ body {
     justify-content: center;
     overflow-y: auto;
     flex: 1;
+    -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 .books-grid {
@@ -1087,6 +1361,7 @@ body {
     margin: 0 auto;
     overflow-y: auto;
     flex: 1;
+    -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 /* 播放控制面板样式 */
@@ -1446,6 +1721,9 @@ body {
     align-items: center;
     z-index: 9999; /* 提高z-index确保在最上层 */
     backdrop-filter: blur(5px); /* 添加背景模糊效果 */
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -1453,12 +1731,13 @@ body {
     padding: 20px;
     border-radius: 8px;
     width: 300px;
-    margin: 20px;
+    margin: auto;
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: modalSlideIn 0.3s ease-out;
+    -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
 }
 
 .modal-content input,
