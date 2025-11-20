@@ -104,6 +104,8 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     border-radius: 12px;
     padding: 30px;
     width: 320px;
+    max-width: 90vw; /* 确保在小屏幕上不超出 */
+    margin: 0 auto; /* 水平居中 */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
     animation: slideUp 0.5s ease-out;
@@ -648,6 +650,7 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     .auth-container {
         width: 280px;
         padding: 25px;
+        margin: 0 auto; /* 确保居中 */
     }
     
     .auth-logo h1 {
@@ -788,36 +791,46 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     .book-card {
         width: calc(50% - 6px);
         height: auto;
-        min-height: 180px;
+        min-height: 140px;
+        padding: 10px;
     }
     
     .add-book-card {
         width: calc(50% - 6px);
         height: auto;
-        min-height: 180px;
+        min-height: 140px;
+        padding: 10px;
     }
     
     .book-cover {
-        width: 60px;
-        height: 80px;
+        width: 50px;
+        height: 65px;
     }
     
     .book-title {
-        font-size: 13px;
+        font-size: 12px;
     }
     
     .book-author {
-        font-size: 11px;
-    }
-    
-    .book-stats {
         font-size: 10px;
     }
     
-    .book-actions button {
+    .book-stats {
         font-size: 9px;
-        padding: 3px 5px;
-        min-width: 28px;
+    }
+    
+    .book-actions button {
+        font-size: 8px;
+        padding: 2px 4px;
+        min-width: 24px;
+    }
+    
+    .book-icon {
+        font-size: 1.5em;
+    }
+    
+    .add-book-icon {
+        font-size: 1.5em;
     }
     
     /* 移动端语录管理页优化 */
@@ -913,6 +926,7 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     .auth-container {
         width: 250px;
         padding: 25px;
+        margin: 0 auto; /* 确保居中 */
     }
     
     .quote-content {
@@ -991,13 +1005,13 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     .book-card, .add-book-card {
         width: calc(50% - 6px);
         height: auto;
-        min-height: 150px;
-        padding: 10px;
+        min-height: 120px;
+        padding: 8px;
     }
     
     .book-cover {
-        width: 45px;
-        height: 65px;
+        width: 40px;
+        height: 55px;
     }
     
     .book-title {
@@ -1009,12 +1023,20 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     }
     
     .book-stats {
-        font-size: 9px;
+        font-size: 8px;
     }
     
     .book-actions button {
         font-size: 8px;
         padding: 2px 4px;
+    }
+    
+    .book-icon {
+        font-size: 1.2em;
+    }
+    
+    .add-book-icon {
+        font-size: 1.2em;
     }
     
     /* 语录页面优化 */
