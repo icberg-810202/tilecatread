@@ -101,10 +101,9 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
 /* 认证容器 - 现代卡片风格 */
 .auth-container {
     background: rgba(255, 255, 255, 0.98);
-    border-radius: 16px;
-    padding: 24px 20px;
-    width: 100%;
-    max-width: 360px;
+    border-radius: 12px;
+    padding: 30px;
+    width: 320px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
     animation: slideUp 0.5s ease-out;
@@ -647,8 +646,8 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
     
     /* 登录注册页面优化 */
     .auth-container {
-        padding: 24px 20px;
-        max-width: 90%;
+        width: 280px;
+        padding: 25px;
     }
     
     .auth-logo h1 {
@@ -911,10 +910,9 @@ button, .btn-primary, .btn-secondary, .btn-modern-primary, .btn-modern-secondary
         margin: 10px 15px;
     }
     
-    .login-container {
+    .auth-container {
         width: 250px;
         padding: 25px;
-        margin: 10px;
     }
     
     .quote-content {
